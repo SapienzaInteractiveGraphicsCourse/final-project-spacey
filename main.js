@@ -22,20 +22,23 @@ function main() {
     camera.position.set(0, 10, 0);
 
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(0, 10, -5);
+    controls.target.set(0, 3.5, -5);
     controls.update();
 
 
 
     var model;
 
-    const color = 0xFFFFFF;
-    const intensity = 1;
-    const hemiLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, 1.0);
+    // const color = 0xFFFFFF;
+    // const intensity = 1;
+    // const hemiLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, 1.0);
+    // const light = new THREE.DirectionalLight(color, intensity);
+    // light.position.set(0, 200, 0);
+    // scene.add(hemiLight);
+    // scene.add(light);
 
-    const light = new THREE.DirectionalLight(color, intensity);
-    light.position.set(0, 200, 0);
-    scene.add(hemiLight);
+    var light = new THREE.PointLight(0xFFFFFF, 2, 1000);
+    light.position.set(0, 400, 0);
     scene.add(light);
 
     aggSfondoStellato();
@@ -54,91 +57,73 @@ function main() {
     // // Load a glTF resource
     loader.load(
         // resource URL
-        'models/l1.glb',
+        'models/map1.glb',
         // called when the resource is loaded
         function (gltf) {
-
             model = gltf.scene;
-            //model.visible = true;
             model.position.set(0, 0, 0);
-
-            model.visible = true;
-
             scene.add(model);
-
             model.traverse(function (object) {
-
                 if (object.isMesh) object.castShadow = true;
-
             });
-
-
-            //
-
-            // createPanel();
-
-
-            //
-
-
-            mixer = new THREE.AnimationMixer(model);
-
-            mixer.clipAction(gltf.animations[0]).play();
-            // walkAction = mixer.clipAction(animations[3]);
-            // runAction = mixer.clipAction(animations[1]);
-
-            // actions = [idleAction, walkAction, runAction];
-
-            // activateAllActions();
-
-            // animate();
-
             console.log('Added');
-
-            // gltf.animations; // Array<THREE.AnimationClip>
-            // gltf.scene; // THREE.Group
-            // gltf.scenes; // Array<THREE.Group>
-            // gltf.cameras; // Array<THREE.Camera>
-            // gltf.asset; // Object
-
         },
         // called while loading is progressing
         function (xhr) {
-
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-
         },
         // called when loading has errors
         function (error) {
-
             console.log('An error happened');
-
         }
     );
 
 
-    // const boxWidth = 1;
-    // const boxHeight = 1;
-    // const boxDepth = 1;
-    // const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    loader.load(
+        // resource URL
+        'models/nav.glb',
+        // called when the resource is loaded
+        function (gltf) {
+            model = gltf.scene;
+            model.position.set(0, 5, 0);
+            scene.add(model);
+            model.traverse(function (object) {
+                if (object.isMesh) object.castShadow = true;
+            });
+            console.log('Added');
+        },
+        // called while loading is progressing
+        function (xhr) {
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        },
+        // called when loading has errors
+        function (error) {
+            console.log('An error happened');
+        }
+    );
 
-    // function makeInstance(geometry, color, x) {
-    //     const material = new THREE.MeshPhongMaterial({ color });
-
-    //     const cube = new THREE.Mesh(geometry, material);
-    //     scene.add(cube);
-
-    //     cube.position.x = x;
-
-    //     return cube;
-    // }
-
-    // const cubes = [
-    //     makeInstance(geometry, 0x44aa88, 0),
-    //     makeInstance(geometry, 0x8844aa, -2),
-    //     makeInstance(geometry, 0xaa8844, 2),
-    // ];
-
+    loader.load(
+        // resource URL
+        'models/boy.glb',
+        // called when the resource is loaded
+        function (gltf) {
+            model = gltf.scene;
+            model.position.set(0, 3.5, -5);
+            scene.add(model);
+            model.traverse(function (object) {
+                if (object.isMesh) object.castShadow = true;
+            });
+            console.log('Added');
+        },
+        // called while loading is progressing
+        function (xhr) {
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        },
+        // called when loading has errors
+        function (error) {
+            console.log('An error happened');
+        }
+    );
     function render(time) {
         time *= 0.001;  // convert time to seconds
         if (resizeRendererToDisplaySize(renderer)) {
@@ -147,14 +132,6 @@ function main() {
             camera.updateProjectionMatrix();
         }
         if (mixer) mixer.update(clock.getDelta());
-
-
-        // cubes.forEach((cube, ndx) => {
-        //     const speed = 1 + ndx * .1;
-        //     const rot = time * speed;
-        //     cube.rotation.x = rot;
-        //     cube.rotation.y = rot;
-        // });
 
         renderer.render(scene, camera);
 
@@ -190,7 +167,7 @@ function aggSfondoStellato() {
         var star = new THREE.Vector3();
         star.x = minDist + THREE.Math.randFloatSpread(2000);
         star.y = minDist + THREE.Math.randFloatSpread(2000);
-        star.z = minDist + THREE.Math.randFloatSpread(2000);
+        star.z = minDist + 500 + THREE.Math.randFloatSpread(2000);
 
         geometria.vertices.push(star);
 
@@ -208,12 +185,26 @@ function aggOggetto(x, y, z, dimensione) {
     var geometry, material, mesh;
 
     geometry = new THREE.SphereGeometry(dimensione, 50, 50);
-    material = new THREE.MeshBasicMaterial({
+    material = new THREE.MeshPhongMaterial({
         map: new THREE.TextureLoader().load("/images/8k_sun.jpg"),
-        shininess: 1
+        shininess: 1000,
     });
 
     mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+    mesh.position.set(x, y, z);
+    mesh.rotation.x = 0.5 * Math.PI;
+
+    geometry = new THREE.SphereGeometry(dimensione + 10, 50, 50);
+    material = new THREE.MeshPhongMaterial({
+        color: '#FFFF00',
+        shininess: 100,
+    });
+
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.material.opacity = 0.05;
+    mesh.material.transparent = true;
+
     scene.add(mesh);
     mesh.position.set(x, y, z);
     mesh.rotation.x = 0.5 * Math.PI;
