@@ -6,6 +6,8 @@ import { DRACOLoader } from './three.js-master/examples/jsm/loaders/DRACOLoader.
 
 import { OrbitControls } from './three.js-master/examples/jsm/controls/OrbitControls.js';
 
+const scene = new THREE.Scene();
+
 function main() {
     var mixer;
 
@@ -15,16 +17,15 @@ function main() {
     const fov = 100;
     const aspect = 2;  // the canvas default
     const near = 0.1;
-    const far = 100;
+    const far = 10000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.set(0, 15, 0);
+    camera.position.set(0, 10, 0);
 
     const controls = new OrbitControls(camera, canvas);
     controls.target.set(0, 10, -5);
     controls.update();
 
 
-    const scene = new THREE.Scene();
 
     var model;
 
@@ -37,6 +38,8 @@ function main() {
     scene.add(hemiLight);
     scene.add(light);
 
+    aggSfondoStellato();
+    aggOggetto(0, 500, 0, 20)
 
     var clock = new THREE.Clock();
 
@@ -48,10 +51,10 @@ function main() {
     dracoLoader.setDecoderPath('./three.js-master/examples/models/draco');
     loader.setDRACOLoader(dracoLoader);
 
-    // Load a glTF resource
+    // // Load a glTF resource
     loader.load(
         // resource URL
-        'gltf/l1.glb',
+        'models/l1.glb',
         // called when the resource is loaded
         function (gltf) {
 
@@ -175,4 +178,44 @@ function resizeRendererToDisplaySize(renderer) {
         renderer.setSize(width, height, false);
     }
     return needResize;
+}
+
+function aggSfondoStellato() {
+
+    var geometria = new THREE.Geometry();
+    var minDist = 100;
+
+    for (var i = 0; i < 10000; i++) {
+
+        var star = new THREE.Vector3();
+        star.x = minDist + THREE.Math.randFloatSpread(2000);
+        star.y = minDist + THREE.Math.randFloatSpread(2000);
+        star.z = minDist + THREE.Math.randFloatSpread(2000);
+
+        geometria.vertices.push(star);
+
+    }
+
+    var materiale = new THREE.PointsMaterial({ color: 0xffffff });
+
+    var campo = new THREE.Points(geometria, materiale);
+
+    scene.add(campo);
+
+}
+function aggOggetto(x, y, z, dimensione) {
+
+    var geometry, material, mesh;
+
+    geometry = new THREE.SphereGeometry(dimensione, 50, 50);
+    material = new THREE.MeshBasicMaterial({
+        map: new THREE.TextureLoader().load("/images/8k_sun.jpg"),
+        shininess: 1
+    });
+
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+    mesh.position.set(x, y, z);
+    mesh.rotation.x = 0.5 * Math.PI;
+
 }
