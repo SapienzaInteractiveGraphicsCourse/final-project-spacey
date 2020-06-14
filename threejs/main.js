@@ -60,7 +60,7 @@ function main() {
     // // Load a glTF resource
     loader.load(
         // resource URL
-        'models/map1.glb',
+        '../models/map1.glb',
         // called when the resource is loaded
         function (gltf) {
             model = gltf.scene;
@@ -87,7 +87,7 @@ function main() {
 
     loader.load(
         // resource URL
-        'models/nav.glb',
+        '../models/nav.glb',
         // called when the resource is loaded
         function (gltf) {
             model = gltf.scene;
@@ -112,7 +112,7 @@ function main() {
 
     loader.load(
         // resource URL
-        'models/boy.glb',
+        '../models/boy.glb',
         // called when the resource is loaded
         function (gltf) {
             model = gltf.scene;
@@ -200,7 +200,7 @@ function aggOggetto(x, y, z, dimensione) {
 
     geometry = new THREE.SphereGeometry(dimensione, 50, 50);
     material = new THREE.MeshPhongMaterial({
-        map: new THREE.TextureLoader().load("/images/8k_sun.jpg"),
+        map: new THREE.TextureLoader().load("/images/sun.jpg"),
         shininess: 1000,
     });
 
