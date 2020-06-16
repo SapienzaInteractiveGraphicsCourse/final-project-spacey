@@ -90,9 +90,41 @@ var createScene = function () {
         shadowGenerator.getShadowMap().renderList.push(boy);
         pl = new Player(boy);
         loaded = true;
+        var skeleton = skeletons[0];
+
+        // ROBOT
+        skeleton.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+        skeleton.animationPropertiesOverride.enableBlending = true;
+        skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
+        skeleton.animationPropertiesOverride.loopMode = 1;
+
+        var animation = skeleton.getAnimationRange("Walk");
+
+        document.addEventListener('keydown', function (event) {
+            skeleton.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+            skeleton.animationPropertiesOverride.enableBlending = true;
+            skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
+            skeleton.animationPropertiesOverride.loopMode = 1;
+            if (event.keyCode == 49) {
+                animation = skeleton.getAnimationRange("Walk");
+            }
+            else if (event.keyCode == 50) {
+                animation = skeleton.getAnimationRange("Jump");
+            }
+            else if (event.keyCode == 51) {
+                animation = skeleton.getAnimationRange("Stand");
+            }
+            scene.beginAnimation(skeleton, animation.from, animation.to, true);
+
+        });
+
+        // IDLE
+        if (animation) scene.beginAnimation(skeleton, animation.from, animation.to, true);
 
     });
-
+    var gravityVector = new BABYLON.Vector3(0, -1.62, 0); // moon gravity
+    var physicsPlugin = new BABYLON.CannonJSPlugin();
+    scene.enablePhysics(gravityVector, physicsPlugin);
     return scene;
 };
 var scene = createScene();
