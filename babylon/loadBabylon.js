@@ -44,7 +44,7 @@ var createScene = function () {
         scene.meshes[0].position.y = 3;
         scene.meshes[0].position.z = -10;
         var alpha = 0;
-        var beta = Math.PI/2;
+        var beta = 5*Math.PI/4;
         var gamma =  0;
         scene.meshes[0].rotate(BABYLON.Axis.Z, gamma, BABYLON.Space.WORLD);
         scene.meshes[0].rotate(BABYLON.Axis.X, alpha, BABYLON.Space.WORLD);
@@ -59,9 +59,30 @@ var createScene = function () {
         scene.meshes[1].position.y = 10;
         scene.meshes[1].position.z = 20;
 
-        //scene.meshes[1].checkCollisions = true;
+        //scene.meshes[1].checkCollisions = false;
+        //scene.meshes[1].showBoundingBox = true;
         //scene.meshes[1].setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, { mass: 4 });        
         //camera.target = mymesh;
+
+        var animationBox = new BABYLON.Animation("navAnimation", "position", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3
+                        , BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+        // Animation keys
+        var keys = [];
+
+        keys.push({
+            frame: 0,
+            value: scene.meshes[0].position
+        });
+
+        keys.push({
+            frame: 100,
+            value: scene.meshes[0].position.add(new BABYLON.Vector3(18, scene.meshes[0].position.y, 18))
+        });
+
+        animationBox.setKeys(keys);
+        scene.meshes[0].animations = [];
+        scene.meshes[0].animations.push(animationBox);
+        scene.beginAnimation(scene.meshes[0], 0, 100, true);
 
         var ground = BABYLON.Mesh.CreateGround("ground1", 50, 50, 2, scene);
         ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, 
