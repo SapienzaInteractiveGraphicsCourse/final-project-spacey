@@ -75,30 +75,30 @@ var createScene = function () {
         shadowGenerator.getShadowMap().renderList.push(nav);
     });
 
-    BABYLON.SceneLoader.Append("../models/", "ACES.babylon", scene, function (newMeshes) {
+    BABYLON.SceneLoader.ImportMesh("ACES", "../models/", "ACES.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
-        var boy = scene.getMeshByName("ACES1");
+        var boy = scene.getMeshByName("ACES");
         boy.position = currentPosition;
         shadowGenerator.getShadowMap().renderList.push(boy);
 
         actualBones = {
-            "root": boy.skeleton.bones[0],
-            "trunk": boy.skeleton.bones[1],
-            "leftUpperArm": boy.skeleton.bones[2],
-            "leftLowerArm": boy.skeleton.bones[3],
-            "leftHand": boy.skeleton.bones[4],
-            "rightUpperArm": boy.skeleton.bones[5],
-            "rightLowerArm": boy.skeleton.bones[6],
-            "rightHand": boy.skeleton.bones[7],
-            "leftUpperLeg": boy.skeleton.bones[8],
-            "leftLowerLeg": boy.skeleton.bones[9],
-            "leftUpperFoot": boy.skeleton.bones[10],
-            "leftLowerFoot": boy.skeleton.bones[11],
-            "rightUpperLeg": boy.skeleton.bones[12],
-            "rightLowerLeg": boy.skeleton.bones[13],
-            "rightUpperFoot": boy.skeleton.bones[14],
-            "rightLowerFoot": boy.skeleton.bones[15],
-            "head": boy.skeleton.bones[16],
+            "root": skeletons[0].bones[0],
+            "trunk": skeletons[0].bones[1],
+            "leftUpperArm": skeletons[0].bones[2],
+            "leftLowerArm": skeletons[0].bones[3],
+            "leftHand": skeletons[0].bones[4],
+            "rightUpperArm": skeletons[0].bones[5],
+            "rightLowerArm": skeletons[0].bones[6],
+            "rightHand": skeletons[0].bones[7],
+            "leftUpperLeg": skeletons[0].bones[8],
+            "leftLowerLeg": skeletons[0].bones[9],
+            "leftUpperFoot": skeletons[0].bones[10],
+            "leftLowerFoot": skeletons[0].bones[11],
+            "rightUpperLeg": skeletons[0].bones[12],
+            "rightLowerLeg": skeletons[0].bones[13],
+            "rightUpperFoot": skeletons[0].bones[14],
+            "rightLowerFoot": skeletons[0].bones[15],
+            "head": skeletons[0].bones[16],
         }
         bonesOffset = {};
         for (var key in actualBones) {
@@ -117,10 +117,10 @@ var createScene = function () {
         }
 
         // make change of animation smooter
-        boy.skeleton.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
-        boy.skeleton.animationPropertiesOverride.enableBlending = true;
-        boy.skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
-        boy.skeleton.animationPropertiesOverride.loopMode = 1;
+        skeletons[0].animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+        skeletons[0].animationPropertiesOverride.enableBlending = true;
+        skeletons[0].animationPropertiesOverride.blendingSpeed = 0.05;
+        skeletons[0].animationPropertiesOverride.loopMode = 1;
 
         document.addEventListener('keydown', function (event) {
             if (event.keyCode == 49) { //1 key
@@ -142,7 +142,6 @@ var createScene = function () {
         // }
 
     });
-
     // var gravityVector = new BABYLON.Vector3(0, -1.62, 0); // moon gravity
     // var physicsPlugin = new BABYLON.CannonJSPlugin();
     // scene.enablePhysics(gravityVector, physicsPlugin);
