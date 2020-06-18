@@ -3,8 +3,8 @@ var engine = new BABYLON.Engine(canvas, true);
 
 var pl;
 var loaded = false;
-var bonesOffset = [];
-var actualBones = [];
+var bonesOffset = {};
+var actualBones = {};
 var currentPosition = new BABYLON.Vector3(5, 4, 0);
 
 
@@ -80,27 +80,25 @@ var createScene = function () {
         var boy = scene.getMeshByName("Z2");
         boy.position = currentPosition;
         shadowGenerator.getShadowMap().renderList.push(boy);
-
         actualBones = {
-            "root": skeletons[0].bones[0],
-            "trunk": skeletons[0].bones[1],
-            "leftUpperArm": skeletons[0].bones[2],
-            "leftLowerArm": skeletons[0].bones[3],
-            "leftHand": skeletons[0].bones[4],
-            "rightUpperArm": skeletons[0].bones[5],
-            "rightLowerArm": skeletons[0].bones[6],
-            "rightHand": skeletons[0].bones[7],
-            "leftUpperLeg": skeletons[0].bones[8],
-            "leftLowerLeg": skeletons[0].bones[9],
-            "leftUpperFoot": skeletons[0].bones[10],
-            "leftLowerFoot": skeletons[0].bones[11],
-            "rightUpperLeg": skeletons[0].bones[12],
-            "rightLowerLeg": skeletons[0].bones[13],
-            "rightUpperFoot": skeletons[0].bones[14],
-            "rightLowerFoot": skeletons[0].bones[15],
-            "head": skeletons[0].bones[16],
+            "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
+            "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
+            "leftUpperArm": skeletons[0].bones.filter((val) => { return val.id == 'upperArm.L' })[0],
+            "leftLowerArm": skeletons[0].bones.filter((val) => { return val.id == 'lowerArm.L' })[0],
+            "leftHand": skeletons[0].bones.filter((val) => { return val.id == 'hand.L' })[0],
+            "rightUpperArm": skeletons[0].bones.filter((val) => { return val.id == 'upperArm.R' })[0],
+            "rightLowerArm": skeletons[0].bones.filter((val) => { return val.id == 'lowerArm.R' })[0],
+            "rightHand": skeletons[0].bones.filter((val) => { return val.id == 'hand.R' })[0],
+            "leftUpperLeg": skeletons[0].bones.filter((val) => { return val.id == 'upperLeg.L' })[0],
+            "leftLowerLeg": skeletons[0].bones.filter((val) => { return val.id == 'lowerLeg.L' })[0],
+            "leftUpperFoot": skeletons[0].bones.filter((val) => { return val.id == 'upperFoot.L' })[0],
+            "leftLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.L' })[0],
+            "rightUpperLeg": skeletons[0].bones.filter((val) => { return val.id == 'upperLeg.R' })[0],
+            "rightLowerLeg": skeletons[0].bones.filter((val) => { return val.id == 'lowerLeg.R' })[0],
+            "rightUpperFoot": skeletons[0].bones.filter((val) => { return val.id == 'upperFoot.R' })[0],
+            "rightLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.R' })[0],
+            "head": skeletons[0].bones.filter((val) => { return val.id == 'head' })[0],
         }
-        bonesOffset = {};
         for (var key in actualBones) {
             bonesOffset[key] = {
                 "rotation": {
@@ -113,6 +111,7 @@ var createScene = function () {
                     "y": actualBones[key].position.y,
                     "z": actualBones[key].position.z
                 },
+                "id": actualBones[key].id
             };
         }
 
@@ -134,12 +133,6 @@ var createScene = function () {
 
             }
         });
-
-        // IDLE
-        // if (animation) {
-        //     scene.beginAnimation(skeleton, animation.from, animation.to, true);
-        //     console.log(scene.beginAnimation(skeleton, animation.from, animation.to, true));
-        // }
 
     });
     // var gravityVector = new BABYLON.Vector3(0, -1.62, 0); // moon gravity
