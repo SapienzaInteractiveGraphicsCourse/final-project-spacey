@@ -5,15 +5,15 @@ var pl;
 var loaded = false;
 var bonesOffset = [];
 var actualBones = [];
-var currentPosition = new BABYLON.Vector3(5, -18, 0);
-var cameraPosition = new BABYLON.Vector3(5, -17, 0);
+var currentPosition = new BABYLON.Vector3(-10, -22, -10);
+var cameraPosition = new BABYLON.Vector3(-10, -20, -10);
 
 
 function radians(deg) { return deg * Math.PI / 180; }
 
 var createScene = function () {
 
-    engine.enableOfflineSupport = false;
+    //engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
 
@@ -24,21 +24,20 @@ var createScene = function () {
     camera.upperRadiusLimit = 50;
     camera.wheelDeltaPercentage = 0.01;
 
-    // var hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 100, -200), scene);
-    // hemiLight.intensity = 0.1;
-    // hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
-    // hemiLight.specular = new BABYLON.Color3(1, 0.82, 0, 0.36);
-    // hemiLight.groundColor = new BABYLON.Color3(0, 0, 0);
-    // hemiLight.shadowMaxZ = 1000;
-    // hemiLight.shadowMinZ = 0.1;
+    var hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 100, -200), scene);
+    hemiLight.intensity = 0.2;
+    hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
+    hemiLight.specular = new BABYLON.Color3(0.6, 0.6, 0.5);
+    hemiLight.groundColor = new BABYLON.Color3(0, 0, 0);
 
     var dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(0, -1, 2), scene);
     dirLight.intensity = 0.8;
     dirLight.diffuse = new BABYLON.Color3(1, 1, 1);
     dirLight.specular = new BABYLON.Color3(1, 1, 1);
+    dirLight.ambient = new BABYLON.Color3(1, 1, 1);
     dirLight.groundColor = new BABYLON.Color3(0, 0, 0);
-    dirLight.shadowMaxZ = 2000;
-    dirLight.shadowMinZ = 0.1;
+    dirLight.shadowMaxZ = 3000;
+    dirLight.shadowMinZ = 1;
 
     // var pointLight = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 100, -200), scene);
     // pointLight.intensity = 0.5;
@@ -55,8 +54,16 @@ var createScene = function () {
     dirLight.position = godrays.mesh.position;
 
     // Shadows
-    var shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
-    shadowGenerator.useBlurCloseExponentialShadowMap = true;
+    var shadowGenerator = new BABYLON.ShadowGenerator(5000, dirLight);
+    //shadowGenerator.useBlurCloseExponentialShadowMap = true;
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.useKernelBlur = true;
+    shadowGenerator.blurKernel = 1;
+    shadowGenerator.forceBackFacesOnly = true;
+    shadowGenerator.bias = 0.00001;
+    //shadowGenerator.useBlurExponentialShadowMap = true;
+    //shadowGenerator.blurScale = 10;
+    //shadowGenerator.setDarkness(0.5);
     //shadowGenerator.blurBoxOffset = 5.0;
     //shadowGenerator.forceBackFacesOnly = true;
     //shadowGenerator.blurKernel = 32;
@@ -86,14 +93,12 @@ var createScene = function () {
     earth.material = earthMaterial;
     earth.material.diffuseTexture = new BABYLON.Texture("../images/earth.png", scene);
 
-    // integrate ground with map1
-    //var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
 
     BABYLON.SceneLoader.Append("../models/", "l1_new_big.glb", scene, function (newMeshes) {
         var map = scene.getMeshByName("Gale Crater");
         map.position = new BABYLON.Vector3(0, 0, 0);
         var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
-        groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+        groundMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
         map.material = groundMaterial;
         shadowGenerator.addShadowCaster(map);
         shadowGenerator.getShadowMap().renderList.push(map);
@@ -102,22 +107,23 @@ var createScene = function () {
 
     });
 
-    BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
-        var nav = scene.getMeshByName("MMSEV");
-        nav.position = new BABYLON.Vector3(10, -18, 0);
-        shadowGenerator.addShadowCaster(nav);
-        shadowGenerator.getShadowMap().renderList.push(nav);
-        nav.receiveShadows = true;
+    // BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
+    //     var nav = scene.getMeshByName("MMSEV");
+    //     nav.position = new BABYLON.Vector3(10, -18, 0);
+    //     shadowGenerator.addShadowCaster(nav);
+    //     shadowGenerator.getShadowMap().renderList.push(nav);
+    //     nav.receiveShadows = true;
 
-    });
+    // });
 
     BABYLON.SceneLoader.ImportMesh("ACES", "../models/", "ACES.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
         var boy = scene.getMeshByName("ACES");
         boy.position = currentPosition;
+        //camera.setTarget(boy)
         shadowGenerator.addShadowCaster(boy);
         shadowGenerator.getShadowMap().renderList.push(boy);
-        boy.receiveShadows = true;
+        //boy.receiveShadows = true;
         actualBones = {
             "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
             "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],

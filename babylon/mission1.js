@@ -75,7 +75,7 @@ var createScene = function () {
         shadowGenerator.getShadowMap().renderList.push(nav);
     });
 
-    BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+    BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
         var boy = scene.getMeshByName("Z2");
         boy.position = currentPosition;
