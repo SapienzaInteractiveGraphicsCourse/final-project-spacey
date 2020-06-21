@@ -26,7 +26,8 @@ var createScene = function () {
     //var physicsPlugin = new BABYLON.AmmoJSPlugin();
     scene.enablePhysics(gravityVector, physicsPlugin);
 
-    var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 3, Math.PI / 4, 3, new BABYLON.Vector3(50, 50, 50), scene);
+    var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 3, Math.PI / 4, 3, new BABYLON.Vector3(30, 30, 30), scene);
+    //var camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(20, 20, 20), scene);
     camera.setTarget(BABYLON.Vector3.Zero());
     camera.attachControl(canvas, true);
 
@@ -44,6 +45,7 @@ var createScene = function () {
         boy.physicsImpostor = new BABYLON.PhysicsImpostor(boy, BABYLON.PhysicsImpostor.MeshImpostor,
         					  { mass: 1, friction: 0.0, restitution: 0.3 }, scene);
 
+        camera.lockedTarget = boy;
         // Ground (using a box not a plane)
         var ground = BABYLON.MeshBuilder.CreateBox("Ground", {width: 50, height: 0.01, depth: 50}, scene);
 
