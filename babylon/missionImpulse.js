@@ -59,6 +59,7 @@ var createScene = function () {
                                  { mass: 0, friction: 0.0, restitution: 0.7 }, scene);
   
         var myTO;
+        var turnboi = toRad(15);
         //Astronaut rotation by keyboard
         var impulseDirection = new BABYLON.Vector3(0, 0, 1);
         var observer_dir = scene.onKeyboardObservable.add((kbInfo) => {
@@ -71,8 +72,9 @@ var createScene = function () {
                             boy.physicsImpostor.physicsBody.linearDamping = 0.9;
                             standAnimation(actualBones).play(true);
                             //boy.physicsImpostor.physicsBody.linearDamping = 0.0;
-                            boy.rotate(BABYLON.Axis.Y, -Math.PI/2, BABYLON.Space.WORLD);
-                            impulseDirection = rotateVector(impulseDirection, -Math.PI/2);
+                            //boy.rotationQuaternion.multiplyInPlace(BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0,1,0), turnboi))
+                            boy.rotate(BABYLON.Axis.Y, -turnboi, BABYLON.Space.WORLD);
+                            impulseDirection = rotateVector(impulseDirection, -turnboi);
                             clearTimeout(myTO);
                         
                         //Rotate Right
@@ -81,8 +83,8 @@ var createScene = function () {
                         case "D":
                             boy.physicsImpostor.physicsBody.linearDamping = 0.9;
                             standAnimation(actualBones).play(true);
-                            boy.rotate(BABYLON.Axis.Y, Math.PI/2, BABYLON.Space.WORLD);
-                            impulseDirection = rotateVector(impulseDirection, Math.PI/2);
+                            boy.rotate(BABYLON.Axis.Y, turnboi, BABYLON.Space.WORLD);
+                            impulseDirection = rotateVector(impulseDirection, turnboi);
                             clearTimeout(myTO);
                         break
 
