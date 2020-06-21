@@ -58,49 +58,67 @@ var createScene = function () {
         ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.PlaneImpostor,
                                  { mass: 0, friction: 0.0, restitution: 0.7 }, scene);
   
-        var myTO;
+        //var myTO;
         var turnboi = toRad(15);
+        var flagImp = 0;
         //Astronaut rotation by keyboard
         var impulseDirection = new BABYLON.Vector3(0, 0, 1);
         var observer_dir = scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
                     switch (kbInfo.event.key) {
-                        //Rotate Left
+                        //Rotate Left by an amgle specified by turnboi
                         case "a":
                         case "A":
-                            boy.physicsImpostor.physicsBody.linearDamping = 0.9;
-                            standAnimation(actualBones).play(true);
+                            //boy.physicsImpostor.physicsBody.linearDamping = 0.9;
+                            boy.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero())
+                            //standAnimation(actualBones).play(true);
                             //boy.physicsImpostor.physicsBody.linearDamping = 0.0;
                             //boy.rotationQuaternion.multiplyInPlace(BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0,1,0), turnboi))
                             boy.rotate(BABYLON.Axis.Y, -turnboi, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, -turnboi);
-                            clearTimeout(myTO);
+                            if(flagImp) {
+                                Pulse();
+                            }
+                            else {
+                                standAnimation(actualBones).play(true);
+                            }
+                            //clearTimeout(myTO);
                         
-                        //Rotate Right
+                        //Rotate Right by an amgle specified by turnboi
                         break
                         case "d":
                         case "D":
-                            boy.physicsImpostor.physicsBody.linearDamping = 0.9;
-                            standAnimation(actualBones).play(true);
+                            boy.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero())
                             boy.rotate(BABYLON.Axis.Y, turnboi, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, turnboi);
-                            clearTimeout(myTO);
+                            if(flagImp) {
+                                Pulse();
+                            }
+                            else {
+                                standAnimation(actualBones).play(true);
+                            }
+                            //clearTimeout(myTO);
                         break
 
-                        //Rotate Back
+                        //Stop || Remove impulse
                         case "s":
                         case "S":
-                            boy.physicsImpostor.physicsBody.linearDamping = 0.9;
+                            flagImp = 0;
+                            //boy.physicsImpostor.physicsBody.linearDamping = 0.9;
+                            boy.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero())
+                            console.log("Get Vel After key S|s", boy.physicsImpostor.getLinearVelocity());
                             standAnimation(actualBones).play(true);
-                            boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD);
+/*                            boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, Math.PI);
-                            clearTimeout(myTO);
+                            clearTimeout(myTO);*/
                         break
 
                         //Apply Impulse
                         case "w":
                         case "W":
+                            flagImp = 1;
+                            console.log("Impluse applied!!!");
                             Pulse();
                         break
                     }
@@ -112,7 +130,7 @@ var createScene = function () {
         var impulseMagnitude = 1;
         var contactLocalRefPoint = new BABYLON.Vector3(0, 0, 0);
 
-        console.log("Get Vel Before", boy.physicsImpostor.getLinearVelocity());
+        console.log("Get Vel Initial", boy.physicsImpostor.getLinearVelocity());
         var Pulse = function() {
             boy.physicsImpostor.physicsBody.linearDamping = 0;
             boy.physicsImpostor.applyImpulse(impulseDirection.scale(impulseMagnitude), boy.getAbsolutePosition().add(contactLocalRefPoint));
@@ -120,19 +138,7 @@ var createScene = function () {
             walkAnimation(actualBones).play(true);
             //console.log("Get Vel", boy.physicsImpostor.getLinearVelocity());
             //console.log("Has obs", scene.onKeyboardObservable.hasObservers);
-            myTO = setTimeout(function(){
 
-                console.log("damping ON");
-                scene.clearColor = BABYLON.Color3.Random();
-            
-                // boy.physicsImpostor.physicsBody.angularDamping = 0.9;
-                boy.physicsImpostor.physicsBody.linearDamping = 0.9;
-                //boy.physicsImpostor.setLinearVelocity(boy.physicsImpostor.getLinearVelocity().scale(0.95));
-                //console.log("Get Vel D", boy.physicsImpostor.getLinearVelocity());
-                //walkAnimation(actualBones).play(false); 
-                standAnimation(actualBones).play(true);
-
-            }, 8000);
         }
         var size = boy.getBoundingInfo().boundingSphere;
         //var myPoints = [boy.getAbsolutePosition().add(size.center),boy.getAbsolutePosition().add(impulseDirection)];
