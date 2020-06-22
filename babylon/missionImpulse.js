@@ -34,6 +34,57 @@ var createScene = function () {
     var light = new BABYLON.HemisphericLight("Hemi", new BABYLON.Vector3(0, 1, 0), scene);
 
     //var shadowGenerator = new BABYLON.ShadowGenerator(2048, light);
+    BABYLON.SceneLoader.ImportMesh("Gale Crater","../models/", "gale.babylon", scene, function (newMeshes) {
+        var map = scene.getMeshByName("Gale Crater");
+        map.position = new BABYLON.Vector3(0, -10, 0);
+        //shadowGenerator.getShadowMap().renderList.push(map);
+        var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+        groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+        map.material = groundMaterial;
+        map.physicsImpostor = new BABYLON.PhysicsImpostor(map, BABYLON.PhysicsImpostor.PlaneImpostor,
+                                 { mass: 0, friction: 0.0, restitution: 0.7 }, scene);
+    });
+
+    BABYLON.SceneLoader.ImportMesh("MMSEV", "../models/babylonFiles/", "nav.babylon", scene, function (newMeshes) {
+        var nav = scene.getMeshByName("MMSEV");
+        //nav.position = new BABYLON.Vector3(0, 5, 0);
+        nav.rotate(BABYLON.Axis.Y, Math.PI/2, BABYLON.Space.WORLD);
+        //shadowGenerator.getShadowMap().renderList.push(nav);
+        nav.physicsImpostor = new BABYLON.PhysicsImpostor(nav, 
+                                        BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.3 }, scene);
+        
+        //Create Path for Path following
+        var points = [];
+        var n = 600; 
+        var r = 40; //radius
+        for (var i = 0; i < 2*n + 1; i++) {
+            points.push( new BABYLON.Vector3( (r)*Math.cos(i*Math.PI/n), 0, (r)*Math.sin(i*Math.PI/n)));
+        }    
+
+/*        var track = BABYLON.MeshBuilder.CreateLines('track', {points: points}, scene);
+        track.color = new BABYLON.Color3(0, 0, 0);*/
+
+        nav.position.y = 5;
+        nav.position.z = r;
+        var path3d = new BABYLON.Path3D(points);
+        var normals = path3d.getNormals();
+        var theta = Math.acos(BABYLON.Vector3.Dot(BABYLON.Axis.Z,normals[0]));
+        nav.rotate(BABYLON.Axis.Y, theta, BABYLON.Space.WORLD);
+    
+        var i=0;
+        scene.registerAfterRender(function() {
+        nav.position.x = points[i].x;
+        nav.position.z = points[i].z;
+
+         
+        theta = Math.acos(BABYLON.Vector3.Dot(normals[i],normals[i+1]));
+        var dir = BABYLON.Vector3.Cross(normals[i],normals[i+1]).y;
+        var dir = dir/Math.abs(dir);
+        nav.rotate(BABYLON.Axis.Y, dir * theta, BABYLON.Space.WORLD);
+         
+        i = (i + 1) % (2*n-1);  
+        });   
+    });
 
     BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
@@ -46,17 +97,18 @@ var createScene = function () {
         					  { mass: 1, friction: 0.0, restitution: 0.3 }, scene);
 
         camera.lockedTarget = boy;
-        // Ground (using a box not a plane)
+/*        // Ground (using a box not a plane)
         var ground = BABYLON.MeshBuilder.CreateBox("Ground", {width: 50, height: 0.01, depth: 50}, scene);
-
+        var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/moon.jpeg", 200, 200, 250, 0, 10, scene, false);
         var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-        groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
-        groundMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        groundMat.backFaceCulling = false;
+        //groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        //groundMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        //groundMat.backFaceCulling = false;
+        groundMat.diffuseTexture = new BABYLON.Texture("../images/moon.jpeg", scene);
         ground.material = groundMat;
         ground.receiveShadows = true;
         ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.PlaneImpostor,
-                                 { mass: 0, friction: 0.0, restitution: 0.7 }, scene);
+                                 { mass: 0, friction: 0.0, restitution: 0.7 }, scene);*/
   
         //var myTO;
         var turnboi = toRad(15);
