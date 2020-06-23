@@ -3,43 +3,74 @@ var engine = new BABYLON.Engine(canvas, true);
 
 var pl;
 var loaded = false;
-var bonesOffset = {};
-var actualBones = {};
-var currentPosition = new BABYLON.Vector3(5, 4, 0);
-
+var bonesOffset = [];
+var actualBones = [];
+var currentPosition = new BABYLON.Vector3(-10, -22, -10);
+var cameraPosition = new BABYLON.Vector3(0, 50, 0);
+var camera;
+var ground;
+var boy;
 
 function radians(deg) { return deg * Math.PI / 180; }
 
 var createScene = function () {
 
-    engine.enableOfflineSupport = false;
+    //engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
+    camera = new BABYLON.FreeCamera("camera1", cameraPosition, scene);
+    //camera = new BABYLON.ArcRotateCamera("camera1", 0, 0, 3, cameraPosition, scene);
+    camera.rotation.x = camera.rotation.x - Math.PI
+    var hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 100, -200), scene);
+    hemiLight.intensity = 0.2;
+    hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
+    hemiLight.specular = new BABYLON.Color3(0.6, 0.6, 0.5);
+    hemiLight.groundColor = new BABYLON.Color3(0, 0, 0);
 
-    var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 2, Math.PI / 4, 3, new BABYLON.Vector3(5, 5, 0), scene);
-    camera.attachControl(canvas, true);
+    var dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(0, -1, 2), scene);
+    dirLight.intensity = 0.8;
+    dirLight.diffuse = new BABYLON.Color3(1, 1, 1);
+    dirLight.specular = new BABYLON.Color3(1, 1, 1);
+    dirLight.ambient = new BABYLON.Color3(1, 1, 1);
+    dirLight.groundColor = new BABYLON.Color3(0, 0, 0);
+    dirLight.shadowMaxZ = 3000;
+    dirLight.shadowMinZ = 1;
 
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 50;
-    camera.wheelDeltaPercentage = 0.01;
-
-    var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 50, -200), scene);
-    light.intensity = 0.6;
-    light.specular = BABYLON.Color3.White();
-
-    var light = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 50, -200), scene);
+    // var pointLight = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 100, -200), scene);
+    // pointLight.intensity = 0.5;
+    // pointLight.diffuse = new BABYLON.Color3(1, 1, 1);
+    // //pointLight.specular = new BABYLON.Color3(1, 1, 1);
+    // pointLight.groundColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+    // pointLight.shadowMaxZ = 1000;
+    // pointLight.shadowMinZ = 0.1;
     var godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, camera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
     godrays.mesh.material.diffuseTexture.hasAlpha = true;
-    godrays.mesh.position = new BABYLON.Vector3(0, 50, -200);
+    godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
     godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
-    light.position = godrays.mesh.position;
+    dirLight.position = godrays.mesh.position;
+    //camera.setTarget(scene.getMeshByName("godrays"));
+    //camera.target = dirLight.position;
 
     // Shadows
-    var shadowGenerator = new BABYLON.ShadowGenerator(2048, light);
-    shadowGenerator.useVarianceShadowMap = true;
-    shadowGenerator.usePoissonSampling = true;
-    shadowGenerator.bias = 0.01;
+    var shadowGenerator = new BABYLON.ShadowGenerator(5000, dirLight);
+    //shadowGenerator.useBlurCloseExponentialShadowMap = true;
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.useKernelBlur = true;
+    shadowGenerator.blurKernel = 1;
+    shadowGenerator.forceBackFacesOnly = true;
+    shadowGenerator.bias = 0.00001;
+    //shadowGenerator.useBlurExponentialShadowMap = true;
+    //shadowGenerator.blurScale = 10;
+    //shadowGenerator.setDarkness(0.5);
+    //shadowGenerator.blurBoxOffset = 5.0;
+    //shadowGenerator.forceBackFacesOnly = true;
+    //shadowGenerator.blurKernel = 32;
+    //shadowGenerator.useKernelBlur = true;
+    //shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_LOW;
+    //shadowGenerator.bias = 0.01;
+    //shadowGenerator.useContactHardeningShadow = true;
+    //shadowGenerator.setDarkness(0.4);
 
     // Skybox
     var skybox = BABYLON.Mesh.CreateBox("galaxy", 500.0, scene);
@@ -51,35 +82,51 @@ var createScene = function () {
     skybox.material = skyboxMaterial;
 
 
-    var earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 12 }, scene);
-    earth.position = new BABYLON.Vector3(100, 50, -200);
+    var earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 10 }, scene);
+    earth.position = new BABYLON.Vector3(200, 100, -100);
     earth.rotation = new BABYLON.Vector3(0, 0, 23.5);
     var earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
-    earthMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
-    earthMaterial.ambientColor = new BABYLON.Color3(1, 1, 1);
+    //earthMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+    //earthMaterial.ambientColor = new BABYLON.Color3(1, 1, 1);
+    earthMaterial.specularColor = new BABYLON.Color3(135 / 255, 206 / 255, 250 / 255);
     earth.material = earthMaterial;
     earth.material.diffuseTexture = new BABYLON.Texture("../images/earth.png", scene);
 
-    // integrate ground with map1
-    //var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
 
-    BABYLON.SceneLoader.Append("../models/", "map1.glb", scene, function (newMeshes) {
-        var map = scene.getMeshByName("Gale Crater");
-        map.position = new BABYLON.Vector3(0, 0, 0);
-        shadowGenerator.getShadowMap().renderList.push(map);
+    BABYLON.SceneLoader.Append("../models/", "l1_new_big.glb", scene, function (newMeshes) {
+        ground = scene.getMeshByName("Gale Crater");
+        ground.position = new BABYLON.Vector3(0, 0, 0);
+        var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+        groundMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        ground.material = groundMaterial;
+        shadowGenerator.addShadowCaster(ground);
+        shadowGenerator.getShadowMap().renderList.push(ground);
+        ground.receiveShadows = true;
+        //finally, say which mesh will be collisionable
+        ground.checkCollisions = true;
     });
 
     BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
         var nav = scene.getMeshByName("MMSEV");
-        nav.position = new BABYLON.Vector3(0, 5, 0);
+        nav.position = new BABYLON.Vector3(-5, -18, -20);
+        nav.scaling = new BABYLON.Vector3(2, 2, 2);
+        shadowGenerator.addShadowCaster(nav);
         shadowGenerator.getShadowMap().renderList.push(nav);
+        nav.receiveShadows = true;
+        nav.checkCollisions = true;
+
     });
 
     BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
-        var boy = scene.getMeshByName("Z2");
+        boy = scene.getMeshByName("Z2");
         boy.position = currentPosition;
+        //camera.setTarget(boy)
+        shadowGenerator.addShadowCaster(boy);
         shadowGenerator.getShadowMap().renderList.push(boy);
+        boy.checkCollisions = true;
+        boy.applyGravity = true;
+        //boy.receiveShadows = true;
         actualBones = {
             "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
             "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
@@ -99,6 +146,8 @@ var createScene = function () {
             "rightLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.R' })[0],
             "head": skeletons[0].bones.filter((val) => { return val.id == 'head' })[0],
         }
+
+        bonesOffset = {};
         for (var key in actualBones) {
             bonesOffset[key] = {
                 "rotation": {
@@ -123,13 +172,22 @@ var createScene = function () {
 
         document.addEventListener('keydown', function (event) {
             if (event.keyCode == 49) { //1 key
-                walkAnimation(actualBones).play(true);
+                jumpAnimation(actualBones).stop();
+                standAnimation(actualBones).stop();
+                walkAnimation(actualBones).play(true); //loop
             }
             else if (event.keyCode == 50) { //2 key
-                jumpAnimation(actualBones).play(true);
+                standAnimation(actualBones).stop();
+                walkAnimation(actualBones).stop();
+                var jump = jumpAnimation(actualBones)
+                jump.speedRatio = 0.5; // we can set velocity according to time of flight
+                jump.play();
+
             }
             else if (event.keyCode == 51) { //3 key
-                standAnimation(actualBones).play(true);
+                walkAnimation(actualBones).stop();
+                jumpAnimation(actualBones).stop();
+                standAnimation(actualBones).play();
 
             }
         });
@@ -138,8 +196,31 @@ var createScene = function () {
     // var gravityVector = new BABYLON.Vector3(0, -1.62, 0); // moon gravity
     // var physicsPlugin = new BABYLON.CannonJSPlugin();
     // scene.enablePhysics(gravityVector, physicsPlugin);
+    scene.shadowsEnabled = true;
+
+    scene.gravity = new BABYLON.Vector3(0, -1.62, 0);
+
+    // Enable Collisions
+    scene.collisionsEnabled = true;
+
+    //Then apply collisions and gravity to the active camera
+    camera.checkCollisions = true;
+    camera.applyGravity = true;
+
+    //Set the ellipsoid around the camera (e.g. your player's size)
+    //camera.ellipsoid = new BABYLON.Vector3(1, 5, 1);
+    camera.collisionRadius = new BABYLON.Vector3(2, 2, 2)
+
+
     return scene;
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    zoomIn();
+
+}, false);
+
 var scene = createScene();
 
 engine.runRenderLoop(function () {
@@ -888,30 +969,89 @@ function standAnimation(parts) {
     return standGroup;
 }
 
-//"root" "trunk" "leftUpperArm" "leftLowerArm" "leftHand" "rightUpperArm" "rightLowerArm" "rightHand" "leftUpperLeg" "leftLowerLeg" "leftUpperFoot" "leftLowerFoot" "rightUpperLeg" "rightLowerLeg" "rightUpperFoot" "rightLowerFoot" "head" "meshSupport1" "leftMeshSupport3" "rightMeshSupport3" "meshSupport2"
+function zoomIn() {
+
+    //for camera move forward
+    var movein = new BABYLON.Animation(
+        "movein",
+        "position",
+        20,
+        BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+
+    var movein_keys = [];
+
+    movein_keys.push({
+        frame: 0,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 200))
+    });
+    movein_keys.push({
+        frame: 50,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 190))
+    });
+    movein_keys.push({
+        frame: 180,
+        value: currentPosition.clone().add(new BABYLON.Vector3(0, 2, 6))
+    });
+    movein_keys.push({
+        frame: 200,
+        value: currentPosition.clone().add(new BABYLON.Vector3(0, 2, 4))
+    });
+
+    movein.setKeys(movein_keys);
+
+    // //for camera to sweep round
+    // var rotate = new BABYLON.Animation(
+    //     "rotate",
+    //     "rotation.y",
+    //     20,
+    //     BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+    //     BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    // );
+
+    // var rotate_keys = [];
+
+    // rotate_keys.push({
+    //     frame: 0,
+    //     value: camera.rotation.y
+    // });
+    // rotate_keys.push({
+    //     frame: 20,
+    //     value: camera.rotation.y
+    // });
+    // rotate_keys.push({
+    //     frame: 180,
+    //     value: camera.rotation.y - Math.PI * 2
+    // });
+    // rotate_keys.push({
+    //     frame: 200,
+    //     value: camera.rotation.y - Math.PI * 2
+    // });
 
 
 
-// var body_parts = {
-//     "root": scene.getMeshByID("root"), // 0
-//     "trunk": scene.getMeshByID("trunk"), // 1
-//     "leftUpperArm": scene.getMeshByID("upperArm.L"), // 2
-//     "leftLowerArm": scene.getMeshByID("lowerArm.L"), // 3
-//     "leftHand": scene.getMeshByID("hand.L"), // 4
-//     "rightUpperArm": scene.getMeshByID("upperArm.R"), // 5
-//     "rightLowerArm": scene.getMeshByID("lowerArm.R"), // 6
-//     "rightHand": scene.getMeshByID("hand.R"), // 7
-//     "leftUpperLeg": scene.getMeshByID("upperLeg.L"), // 8
-//     "leftLowerLeg": scene.getMeshByID("lowerLeg.L"), // 9
-//     "leftUpperFoot": scene.getMeshByID("upperFoot.L"), // 10
-//     "leftLowerFoot": scene.getMeshByID("lowerFoot.L"), // 11
-//     "rightUpperLeg": scene.getMeshByID("upperLeg.R"), //12
-//     "rightLowerLeg": scene.getMeshByID("lowerLeg.R"), // 13
-//     "rightUpperFoot": scene.getMeshByID("upperFoot.R"), // 14
-//     "rightLowerFoot": scene.getMeshByID("lowerFoot.R"), // 15
-//     "head": scene.getMeshByID("head"), // 16
-//     "meshSupport1": scene.getMeshByID("meshSupport1"), // 17
-//     "leftMeshSupport3": scene.getMeshByID("meshSupport3.L"), // 18
-//     "rightMeshSupport3": scene.getMeshByID("meshSupport4.R"), // 19
-//     "meshSupport2": scene.getMeshByID("meshSupport2") // 20
-// }
+    // rotate.setKeys(rotate_keys);
+
+    camera.animations = [];
+    //camera.animations.push(rotate);
+    camera.animations.push(movein);
+
+    scene.beginAnimation(camera, 0, 200, false, 1, function () {
+
+        camera = new BABYLON.ArcRotateCamera("camera1", 0, 0, 0, camera.position, scene);
+        camera.attachControl(canvas, true);
+        camera.target = boy.position.clone().add(new BABYLON.Vector3(0, 2, 0))
+        camera.lowerRadiusLimit = 0;
+        camera.upperRadiusLimit = 50;
+        camera.wheelDeltaPercentage = 0.01;
+        scene.activeCamera = camera;
+        //Then apply collisions and gravity to the active camera
+        camera.checkCollisions = true;
+        camera.applyGravity = true;
+        //Set the ellipsoid around the camera (e.g. your player's size)
+        //camera.ellipsoid = new BABYLON.Vector3(1, 5, 1);
+        camera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
+    });
+}
+
