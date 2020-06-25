@@ -1,6 +1,3 @@
-/*import * as BABYLON from 'babylonjs';
-import * as Ammo from 'ammo.js';*/
-
 var canvas = document.getElementById('c');
 var engine = new BABYLON.Engine(canvas, true);
 
@@ -17,17 +14,64 @@ function rotateVector(vect, rot) {
     return rotatedvect;
 }
 
+BABYLON.Mesh.prototype.ellipsoidMesh = undefined;
+BABYLON.Mesh.prototype.showEllipsoid = function(scene) {
+
+    if (!this.isEnabled()) return;
+
+    this.refreshBoundingInfo();    
+
+    var sphere = BABYLON.MeshBuilder.CreateSphere("elli", { 
+        diameterX: this.ellipsoid.x * 2,
+        diameterZ: this.ellipsoid.z * 2,
+        diameterY: this.ellipsoid.y * 2
+        },
+    scene);
+
+//    sphere.position = this.position.add(this.ellipsoidOffset);
+    sphere.position = this.getAbsolutePosition().add(this.ellipsoidOffset);
+
+    this.ellipsoidMesh = sphere;
+    // sphere.showBoundingBox = true;
+    sphere.material = new BABYLON.StandardMaterial("collider", scene);
+    sphere.material.wireframe = true;
+    sphere.material.diffuseColor = BABYLON.Color3.Yellow();
+
+    // special barrel ellipsoid checks
+    if (this.name == "barrel" || this.name == "barrel2") {
+        sphere.material.diffuseColor = BABYLON.Color3.Green();
+        console.log("barrel.ellipsoid: ", this.ellipsoid)
+        var sbb = sphere.getBoundingInfo().boundingBox;
+        console.log("barrel sphere bb.maximum.scale(2): ", sbb.maximum.scale(2));
+    }
+
+    sphere.visibility = .1;
+}
+
+BABYLON.Mesh.prototype.setEllipsoidPerBoundingBox = function(scene) {
+    
+    var bi = this.getBoundingInfo();
+    // console.log("bi: ", bi);
+
+    var bb = bi.boundingBox;
+    // console.log("bb: ", bb);
+
+    // this.ellipsoid = bb.extendSizeWorld.scale(2);
+    // this.ellipsoid = bb.extendSize.scale(2);
+    this.ellipsoid = bb.maximumWorld.subtract(bb.minimumWorld).scale(0.5);
+
+    // this.ellipsoidOffset = new BABYLON.Vector3(0, bbxscaled.y/2, 0);
+    // this.ellipsoidOffset = bbxscaled;
+}
+
 var createScene = function () {
 
     engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
     
-    var gravityVector = new BABYLON.Vector3(0,-9.8, 0);
-    //var physicsPlugin = new BABYLON.OimoJSPlugin();
-    var physicsPlugin = new BABYLON.CannonJSPlugin();
-    //var physicsPlugin = new BABYLON.AmmoJSPlugin();
-    scene.enablePhysics(gravityVector, physicsPlugin);
+    scene.gravity = new BABYLON.Vector3(0, -9.8, 0);
+    scene.collisionsEnabled = true;
 
     var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 3, Math.PI / 4, 3, new BABYLON.Vector3(30, 30, 30), scene);
     //var camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(20, 20, 20), scene);
@@ -38,125 +82,150 @@ var createScene = function () {
 
     //var shadowGenerator = new BABYLON.ShadowGenerator(2048, light);
 
+    BABYLON.SceneLoader.ImportMesh("MMSEV", "../models/babylonFiles/", "nav.babylon", scene, function (newMeshes) {
+        var nav = scene.getMeshByName("MMSEV");
+        //nav.position = new BABYLON.Vector3(0, 5, 0);
+        nav.rotate(BABYLON.Axis.Y, Math.PI/2, BABYLON.Space.WORLD);
+        //shadowGenerator.getShadowMap().renderList.push(nav);
+        nav.applyGravity = true;
+        nav.checkCollisions = true;
+        nav.showBoundingBox = true;
+        nav.ellipsoidOffset = new BABYLON.Vector3(0, 0, -0.5);
+        nav.ellipsoid = new BABYLON.Vector3(1.5, 3, 1.5);
+        nav.setEllipsoidPerBoundingBox(scene);
+        nav.showEllipsoid(scene);
+        nav.visibility = .99;
+        
+        //Create Path for Path following
+        var points = [];
+        var n = 600; 
+        var r = 40; //radius
+        for (var i = 0; i < 2*n + 1; i++) {
+            points.push( new BABYLON.Vector3( (r)*Math.cos(i*Math.PI/n), 0, (r)*Math.sin(i*Math.PI/n)));
+        }    
+
+/*        var track = BABYLON.MeshBuilder.CreateLines('track', {points: points}, scene);
+        track.color = new BABYLON.Color3(0, 0, 0);*/
+
+        nav.position.y = 2;
+        nav.position.z = r;
+        nav.ellipsoidMesh.position = nav.position.add(nav.ellipsoidOffset);
+        var path3d = new BABYLON.Path3D(points);
+        var normals = path3d.getNormals();
+        var theta = Math.acos(BABYLON.Vector3.Dot(BABYLON.Axis.Z,normals[0]));
+        nav.rotate(BABYLON.Axis.Y, theta, BABYLON.Space.WORLD);
+    
+/*        var i=0;
+        scene.registerAfterRender(function() {
+        nav.position.x = points[i].x;
+        nav.position.z = points[i].z;
+
+         
+        theta = Math.acos(BABYLON.Vector3.Dot(normals[i],normals[i+1]));
+        var dir = BABYLON.Vector3.Cross(normals[i],normals[i+1]).y;
+        var dir = dir/Math.abs(dir);
+        nav.rotate(BABYLON.Axis.Y, dir * theta, BABYLON.Space.WORLD);
+        nav.ellipsoidMesh.position = nav.position.add(nav.ellipsoidOffset);
+        nav.ellipsoidMesh.rotation = nav.rotation;
+        i = (i + 1) % (2*n-1);  
+        }); */  
+        //camera.lockedTarget = nav;
+    });
+
 
     BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
         var boy = scene.getMeshByName("Z2");
-        boy.position = new BABYLON.Vector3(-20, 2, 10);
+        //boy.position = new BABYLON.Vector3(-20, 3, 10);
         boy.scaling = new BABYLON.Vector3(3, 3, 3);
         boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD); //so that object launches aligned with conventional world axis
         //shadowGenerator.getShadowMap().renderList.push(boy);
-        boy.physicsImpostor = new BABYLON.PhysicsImpostor(boy, BABYLON.PhysicsImpostor.BoxImpostor,
-        					  { mass: 1, friction: 0.0, restitution: 0.3 }, scene);
+        boy.applyGravity = true;
+        boy.checkCollisions = true;
+        boy.showBoundingBox = true;
+        boy.ellipsoidOffset = new BABYLON.Vector3(0, 2.5, 0);
+        boy.ellipsoid = new BABYLON.Vector3(1.5, 3, 1.5);
+        boy.setEllipsoidPerBoundingBox(scene);
+        boy.showEllipsoid(scene);
+        boy.visibility = .99;
 
-        //camera.lockedTarget = boy;
+        boy.speed = new BABYLON.Vector3(0, 0, 0.08);
+        boy.nextspeed = new BABYLON.Vector3(0, 0, 1);
+
+        camera.lockedTarget = boy;
         // Ground (using a box not a plane)
-        //var ground = BABYLON.MeshBuilder.CreateBox("Ground", {width: 50, height: 0.01, depth: 50}, scene);
+        var ground = BABYLON.MeshBuilder.CreateBox("Ground", {width: 200, height: 0.1, depth: 200}, scene);
         
         var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-        var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/worldHeightMap.jpg", 200, 200, 20, 0, 30, scene, false, function () {
-            ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1.0, restitution: 0.7  });
-        });
-        //ground.position.y = -5;
-        //groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        groundMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
         //groundMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        //groundMat.backFaceCulling = false;
-        groundMat.diffuseTexture = new BABYLON.Texture("../images/moon.jpeg", scene);
+        //groundMat.backFaceCulling = true;
+        groundMat.diffuseTexture = new BABYLON.Texture("../images/moon1.jpg", scene);
         ground.material = groundMat;
         ground.receiveShadows = true;
-  
-        //var myTO;
+        ground.checkCollisions = true;
+        
         var turnboi = toRad(15);
         var flagImp = 0;
         //Astronaut rotation by keyboard
         var impulseDirection = new BABYLON.Vector3(0, 0, 1);
+        var v = 0.04;
+
         var observer_dir = scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
                     switch (kbInfo.event.key) {
                         //Rotate Left by an amgle specified by turnboi
                         case "a":
-                        case "A":
-                            //boy.physicsImpostor.physicsBody.linearDamping = 0.9;
-                            boy.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero())
-                            //standAnimation(actualBones).play(true);
-                            //boy.physicsImpostor.physicsBody.linearDamping = 0.0;
-                            //boy.rotationQuaternion.multiplyInPlace(BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0,1,0), turnboi))
+                        case "A":        
                             boy.rotate(BABYLON.Axis.Y, -turnboi, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, -turnboi);
-                            if(flagImp) {
-                                Pulse();
-                            }
-                            else {
-                                standAnimation(actualBones).play(true);
-                            }
-                            //clearTimeout(myTO);
-                        
-                        //Rotate Right by an amgle specified by turnboi
+                            boy.nextspeed = rotateVector(boy.nextspeed, -turnboi);
+                            boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
                         break
+
+                        //Rotate Right by an amgle specified by turnboi
                         case "d":
-                        case "D":
-                            boy.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero())
+                        case "D":            
                             boy.rotate(BABYLON.Axis.Y, turnboi, BABYLON.Space.WORLD);
-                            impulseDirection = rotateVector(impulseDirection, turnboi);
-                            if(flagImp) {
-                                Pulse();
-                            }
-                            else {
-                                standAnimation(actualBones).play(true);
-                            }
-                            //clearTimeout(myTO);
+                            impulseDirection = rotateVector(impulseDirection, turnboi);;
+                            boy.nextspeed = rotateVector(boy.nextspeed, turnboi);
+                            boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
+                        break
+
+                        //Apply impulse
+                        case "w":
+                        case "W":
+                            flagImp = 1;
+                            console.log("Velocity applied!!!");
+                            boy.nextspeed.x = v*impulseDirection.x;
+                            boy.nextspeed.z = v*impulseDirection.z;
+
+                            boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
+                            //boy.moveWithCollisions(boy.speed);
+                            walkAnimation(actualBones).play(true);
                         break
 
                         //Stop || Remove impulse
                         case "s":
-                        case "S":
+                        case "S":                        
                             flagImp = 0;
-                            //boy.physicsImpostor.physicsBody.linearDamping = 0.9;
-                            boy.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero())
-                            console.log("Get Vel After key S|s", boy.physicsImpostor.getLinearVelocity());
+                            boy.nextspeed.x = 0; 
+                            boy.nextspeed.z = 0;
+                            console.log("Key S|s pressed.....Stop!");
                             standAnimation(actualBones).play(true);
-/*                            boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD);
-                            impulseDirection = rotateVector(impulseDirection, Math.PI);
-                            clearTimeout(myTO);*/
-                        break
-
-                        //Apply Impulse
-                        case "w":
-                        case "W":
-                            flagImp = 1;
-                            console.log("Impluse applied!!!");
-                            Pulse();
                         break
                     }
                 break;
-            }
-        }); 
+            }          
+        });
 
-        //Force/Impulse section
-        var impulseMagnitude = 1;
-        var contactLocalRefPoint = new BABYLON.Vector3(0, 0, 0);
-
-        console.log("Get Vel Initial", boy.physicsImpostor.getLinearVelocity());
-        var Pulse = function() {
-            boy.physicsImpostor.physicsBody.linearDamping = 0;
-            boy.physicsImpostor.applyImpulse(impulseDirection.scale(impulseMagnitude), boy.getAbsolutePosition().add(contactLocalRefPoint));
-        
-            walkAnimation(actualBones).play(true);
-            //console.log("Get Vel", boy.physicsImpostor.getLinearVelocity());
-            //console.log("Has obs", scene.onKeyboardObservable.hasObservers);
-
+        scene.registerBeforeRender(function () {
+        if (flagImp) {
+            boy.moveWithCollisions(boy.speed);
+            boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
         }
-        var size = boy.getBoundingInfo().boundingSphere;
-        //var myPoints = [boy.getAbsolutePosition().add(size.center),boy.getAbsolutePosition().add(impulseDirection)];
- 
-        //var lines = BABYLON.MeshBuilder.CreateLines("lines", {points: myPoints}, scene);
-
-        //var size = boy.getBoundingInfo().boundingBox.extendSize;
-        //var size = boy.getBoundingInfo().boundingSphere;
-
-        //var sphereBody = new CANNON.Body({ mass: 5 });
-        //sphereBody.velocity.set(0, 0.5, 0);
+        });
 
         actualBones = {
             "root": skeletons[0].bones[0],
@@ -197,71 +266,7 @@ var createScene = function () {
         skeletons[0].animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
         skeletons[0].animationPropertiesOverride.enableBlending = true;
         skeletons[0].animationPropertiesOverride.blendingSpeed = 0.05;
-        skeletons[0].animationPropertiesOverride.loopMode = 1;
-
-        //GUI
-        var magnitude = function(value) {
-            impulseMagnitude = value;
-        }
-
-/*        var frictionBox = function(value) {
-            boy.physicsImpostor.friction = value;
-        }
-
-        var frictionGround = function(value) {
-            ground.physicsImpostor.friction = value;
-        }*/
-        
-        var displayMValue = function(value) {
-            return Math.floor(value);
-        }
-
-        var displayFValue = function(value) {
-            return Math.floor(value * 10) / 10;
-        }
-        
-        var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-        var selectBox = new BABYLON.GUI.SelectionPanel("spi");
-        selectBox.width = 0.25;
-        selectBox.height = 0.25;
-        selectBox.background = "#1388AF";
-        selectBox.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-        selectBox.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-         
-        advancedTexture.addControl(selectBox);
-
-        var impulseMGroup = new BABYLON.GUI.SliderGroup("Impulse Magnitude", "S");
-        impulseMGroup.addSlider("Value", magnitude, "units", 1, 10, 1, displayMValue);
-
-        selectBox.addGroup(impulseMGroup);
-
-        var button = BABYLON.GUI.Button.CreateSimpleButton("but", "Apply Impulse");
-        button.width = 0.2;
-        button.height = "40px";
-        button.color = "white";
-        button.background = "#1388AF";
-        button.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-        button.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-        button.top = "-10px";
-
-        button.onPointerClickObservable.add(Pulse)
-        advancedTexture.addControl(button);
-        
-/*        var selectFrictionBox = new BABYLON.GUI.SelectionPanel("spi");
-        selectFrictionBox.width = 0.25;
-        selectFrictionBox.height = 0.25;
-        selectFrictionBox.background = "#1388AF";
-        selectFrictionBox.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-        selectFrictionBox.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-
-        advancedTexture.addControl(selectFrictionBox);
-
-        var frictionGroup = new BABYLON.GUI.SliderGroup("Friction Values", "S");
-        frictionGroup.addSlider("Boy", frictionBox, "units", 0, 10, 0, displayFValue);
-        frictionGroup.addSlider("Ground", frictionGround, "units", 0, 10, 0, displayFValue);
-
-        selectFrictionBox.addGroup(frictionGroup);*/    
+        skeletons[0].animationPropertiesOverride.loopMode = 1;  
 
     });
     return scene;
