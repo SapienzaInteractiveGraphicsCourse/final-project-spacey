@@ -6,11 +6,18 @@ var loaded = false;
 var bonesOffset = [];
 var actualBones = [];
 var currentPosition = new BABYLON.Vector3(-10, -22, -10);
+var targetPosition = new BABYLON.Vector3(20, -22, 150);
 var cameraPosition = new BABYLON.Vector3(0, 50, 0);
 var camera;
 var ground;
 var boy;
 var rect1;
+var panel;
+var rect2;
+var text1;
+var img;
+var button;
+
 function radians(deg) { return deg * Math.PI / 180; }
 
 var createScene = function () {
@@ -40,35 +47,95 @@ var createScene = function () {
 
 
     rect1 = new BABYLON.GUI.Rectangle();
-    rect1.adaptWidthToChildren = true;
-    rect1.adaptHeightToChildren = true;
+    rect1.height = 0.3;
+    rect1.width = 0.7;
     rect1.cornerRadius = 20;
     rect1.color = "Orange";
     advancedTexture.addControl(rect1);
 
-    var panel = new BABYLON.GUI.StackPanel();
+    panel = new BABYLON.GUI.StackPanel();
     rect1.addControl(panel);
 
-    var text1 = new BABYLON.GUI.TextBlock();
-    text1.text = "Hello world";
-    text1.height = "60px";
-    text1.width = "80px";
+    text1 = new BABYLON.GUI.TextBlock();
+    text1.text = "MISSION 1: Hurry up! Your partner needs you, oxigen is running out!";
+    text1.height = "80px";
+    text1.width = 1;
     text1.color = "Orange";
     text1.fontSize = 24;
     panel.addControl(text1);
 
-    var button = BABYLON.GUI.Button.CreateImageWithCenterTextButton("but", "Click me!");
-    button.width = 0.2;
+    button = BABYLON.GUI.Button.CreateImageWithCenterTextButton("button", "START");
+    button.width = 0.3;
     button.height = "40px";
-    button.width = "80px";
     button.cornerRadius = 20;
     button.color = "Orange";
     button.fontSize = 24;
+    button.alpha = 0;
     panel.addControl(button);
 
     button.onPointerUpObservable.add(function () {
+        fading(rect1, 1, 0);
+        fading(button, 1, 0);
         zoomIn();
     });
+
+    rect2 = new BABYLON.GUI.Rectangle();
+    rect2.height = 0.25;
+    rect2.width = 0.1;
+    rect2.cornerRadius = 30;
+    rect2.color = "Orange";
+    rect2.left = '40%';
+    rect2.top = '30%';
+    rect2.alpha = 0;
+    advancedTexture.addControl(rect2);
+
+
+    img = new BABYLON.GUI.Image("", "../images/heightmap.png");
+    img.width = 1.1;
+    img.height = 1.1;
+    img.alpha = 0.5;
+    rect2.addControl(img);
+
+    var pos1 = new BABYLON.GUI.Rectangle();
+    pos1.height = "10px";
+    pos1.width = "10px";
+    pos1.background = "Orange";
+    rect2.addControl(pos1);
+
+    var pos2 = new BABYLON.GUI.Rectangle();
+    pos2.height = "10px";
+    pos2.width = "10px";
+    pos2.background = "Green";
+    rect2.addControl(pos2);
+
+    var rect3 = new BABYLON.GUI.Rectangle();
+    rect3.height = 0.20;
+    rect3.width = 0.85;
+    rect3.cornerRadius = 30;
+    rect3.background = "Gray";
+    rect3.color = "Orange";
+    rect3.top = '-35%';
+    rect2.addControl(rect3);
+
+    var panel2 = new BABYLON.GUI.StackPanel();
+    rect3.addControl(panel2);
+
+    var text2 = new BABYLON.GUI.TextBlock();
+    text2.text = "you: x: y:";
+    text2.height = "15px";
+    text2.width = 1;
+    text2.color = "Orange";
+    text2.fontSize = 12;
+    panel2.addControl(text2);
+
+    var text3 = new BABYLON.GUI.TextBlock();
+    text3.text = "target: x: y:";
+    text3.height = "15px";
+    text3.width = 1;
+    text3.color = "Green";
+    text3.fontSize = 12;
+    panel2.addControl(text3);
+    //targetPosition
 
     // var pointLight = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 100, -200), scene);
     // pointLight.intensity = 0.5;
@@ -138,6 +205,33 @@ var createScene = function () {
         ground.receiveShadows = true;
         //finally, say which mesh will be collisionable
         ground.checkCollisions = true;
+
+        var widthGround = ground.getBoundingInfo().boundingBox.extendSize.x * 2
+        var heightGround = ground.getBoundingInfo().boundingBox.extendSize.z * 2
+
+        pos1.left = boy.position.x / widthGround * img.widthInPixels / 4
+        pos1.top = boy.position.z / heightGround * img.heightInPixels / 4
+
+        pos2.left = targetPosition.x / widthGround * img.widthInPixels / 4
+        pos2.top = targetPosition.z / heightGround * img.heightInPixels / 4
+
+        fading(rect1, 0, 1);
+        hello();
+
+        var txt = text1.text;
+        text1.text = ''
+        var speed = 50;
+        var i = 0;
+        function typeWriter() {
+            if (i < txt.length) {
+                text1.text += txt.charAt(i);
+                i++;
+                setTimeout(typeWriter, speed);
+            } else {
+                fading(button, 0, 1);
+            }
+        }
+        typeWriter()
     });
 
     BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
@@ -248,12 +342,6 @@ var createScene = function () {
 
     return scene;
 };
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    hello();
-
-}, false);
 
 var scene = createScene();
 
@@ -1003,7 +1091,7 @@ function standAnimation(parts) {
     return standGroup;
 }
 
-function zoomIn() {
+function hello() {
 
     //for camera move forward
     var movein = new BABYLON.Animation(
@@ -1021,8 +1109,8 @@ function zoomIn() {
         value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 200))
     });
     movein_keys.push({
-        frame: 200,
-        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 180))
+        frame: 500,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 160))
     });
 
     movein.setKeys(movein_keys);
@@ -1030,7 +1118,7 @@ function zoomIn() {
     camera.animations = [];
     camera.animations.push(movein);
 
-    scene.beginAnimation(camera, 0, 200, false, 1, function () {
+    scene.beginAnimation(camera, 0, 500, false, 1, function () {
     });
 }
 function zoomIn() {
@@ -1048,7 +1136,7 @@ function zoomIn() {
 
     movein_keys.push({
         frame: 0,
-        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 180))
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 160))
     });
     movein_keys.push({
         frame: 180,
@@ -1088,9 +1176,6 @@ function zoomIn() {
     //     frame: 200,
     //     value: camera.rotation.y - Math.PI * 2
     // });
-
-
-
     // rotate.setKeys(rotate_keys);
 
     camera.animations = [];
@@ -1114,6 +1199,32 @@ function zoomIn() {
         //Set the ellipsoid around the camera (e.g. your player's size)
         //camera.ellipsoid = new BABYLON.Vector3(1, 5, 1);
         camera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
+        fading(rect2, 0, 1);
+
     });
 }
 
+function fading(container, start, end) {
+
+    var animationBox = new BABYLON.Animation("fading", "alpha", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+    // An array with all animation keys
+    var keys = [];
+
+    //At the animation key 0, the value of scaling is "1"
+    keys.push({
+        frame: 0,
+        value: start
+    });
+
+    //At the animation key 100, the value of scaling is "1"
+    keys.push({
+        frame: 100,
+        value: end
+    });
+
+    animationBox.setKeys(keys);
+    container.animations = [];
+    container.animations.push(animationBox);
+    scene.beginAnimation(container, 0, 100);
+}
