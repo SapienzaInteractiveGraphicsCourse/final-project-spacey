@@ -10,7 +10,7 @@ var cameraPosition = new BABYLON.Vector3(0, 50, 0);
 var camera;
 var ground;
 var boy;
-
+var rect1;
 function radians(deg) { return deg * Math.PI / 180; }
 
 var createScene = function () {
@@ -35,6 +35,40 @@ var createScene = function () {
     dirLight.groundColor = new BABYLON.Color3(0, 0, 0);
     dirLight.shadowMaxZ = 3000;
     dirLight.shadowMinZ = 1;
+
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+
+    rect1 = new BABYLON.GUI.Rectangle();
+    rect1.adaptWidthToChildren = true;
+    rect1.adaptHeightToChildren = true;
+    rect1.cornerRadius = 20;
+    rect1.color = "Orange";
+    advancedTexture.addControl(rect1);
+
+    var panel = new BABYLON.GUI.StackPanel();
+    rect1.addControl(panel);
+
+    var text1 = new BABYLON.GUI.TextBlock();
+    text1.text = "Hello world";
+    text1.height = "60px";
+    text1.width = "80px";
+    text1.color = "Orange";
+    text1.fontSize = 24;
+    panel.addControl(text1);
+
+    var button = BABYLON.GUI.Button.CreateImageWithCenterTextButton("but", "Click me!");
+    button.width = 0.2;
+    button.height = "40px";
+    button.width = "80px";
+    button.cornerRadius = 20;
+    button.color = "Orange";
+    button.fontSize = 24;
+    panel.addControl(button);
+
+    button.onPointerUpObservable.add(function () {
+        zoomIn();
+    });
 
     // var pointLight = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 100, -200), scene);
     // pointLight.intensity = 0.5;
@@ -217,7 +251,7 @@ var createScene = function () {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    zoomIn();
+    hello();
 
 }, false);
 
@@ -987,8 +1021,34 @@ function zoomIn() {
         value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 200))
     });
     movein_keys.push({
-        frame: 50,
-        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 190))
+        frame: 200,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 180))
+    });
+
+    movein.setKeys(movein_keys);
+
+    camera.animations = [];
+    camera.animations.push(movein);
+
+    scene.beginAnimation(camera, 0, 200, false, 1, function () {
+    });
+}
+function zoomIn() {
+
+    //for camera move forward
+    var movein = new BABYLON.Animation(
+        "movein",
+        "position",
+        20,
+        BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+
+    var movein_keys = [];
+
+    movein_keys.push({
+        frame: 0,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 180))
     });
     movein_keys.push({
         frame: 180,
@@ -1049,6 +1109,8 @@ function zoomIn() {
         //Then apply collisions and gravity to the active camera
         camera.checkCollisions = true;
         camera.applyGravity = true;
+
+        rect1.dispose();
         //Set the ellipsoid around the camera (e.g. your player's size)
         //camera.ellipsoid = new BABYLON.Vector3(1, 5, 1);
         camera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
