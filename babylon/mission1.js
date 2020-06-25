@@ -216,6 +216,7 @@ var createScene = function () {
         pos2.top = targetPosition.z / heightGround * img.heightInPixels / 4
 
         fading(rect1, 0, 1);
+
         hello();
 
         var txt = text1.text;
@@ -227,7 +228,7 @@ var createScene = function () {
                 text1.text += txt.charAt(i);
                 i++;
                 setTimeout(typeWriter, speed);
-            } else {
+            } else if (i == txt.length) {
                 fading(button, 0, 1);
             }
         }
@@ -1109,7 +1110,7 @@ function hello() {
         value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 200))
     });
     movein_keys.push({
-        frame: 500,
+        frame: 400,
         value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 160))
     });
 
@@ -1118,7 +1119,7 @@ function hello() {
     camera.animations = [];
     camera.animations.push(movein);
 
-    scene.beginAnimation(camera, 0, 500, false, 1, function () {
+    scene.beginAnimation(camera, 0, 400, false, 1, function () {
     });
 }
 function zoomIn() {
@@ -1127,7 +1128,7 @@ function zoomIn() {
     var movein = new BABYLON.Animation(
         "movein",
         "position",
-        20,
+        30,
         BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
         BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
     );
@@ -1183,6 +1184,7 @@ function zoomIn() {
     camera.animations.push(movein);
 
     scene.beginAnimation(camera, 0, 200, false, 1, function () {
+        fading(rect2, 0, 1);
 
         camera = new BABYLON.ArcRotateCamera("camera1", 0, 0, 0, camera.position, scene);
         camera.attachControl(canvas, true);
@@ -1199,7 +1201,6 @@ function zoomIn() {
         //Set the ellipsoid around the camera (e.g. your player's size)
         //camera.ellipsoid = new BABYLON.Vector3(1, 5, 1);
         camera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
-        fading(rect2, 0, 1);
 
     });
 }
