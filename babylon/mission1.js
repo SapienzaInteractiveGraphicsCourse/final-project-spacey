@@ -17,6 +17,7 @@ var rect2;
 var text1;
 var img;
 var button;
+var txt = "MISSION 1: Hurry up! Your partner needs you, oxigen is running out!";
 
 function radians(deg) { return deg * Math.PI / 180; }
 
@@ -57,7 +58,6 @@ var createScene = function () {
     rect1.addControl(panel);
 
     text1 = new BABYLON.GUI.TextBlock();
-    text1.text = "MISSION 1: Hurry up! Your partner needs you, oxigen is running out!";
     text1.height = "80px";
     text1.width = 1;
     text1.color = "Orange";
@@ -74,9 +74,8 @@ var createScene = function () {
     panel.addControl(button);
 
     button.onPointerUpObservable.add(function () {
-        fading(rect1, 1, 0);
         fading(button, 1, 0);
-        zoomIn();
+        fading(rect1, 1, 0, zoomIn);
     });
 
     rect2 = new BABYLON.GUI.Rectangle();
@@ -215,24 +214,11 @@ var createScene = function () {
         pos2.left = targetPosition.x / widthGround * img.widthInPixels / 4
         pos2.top = targetPosition.z / heightGround * img.heightInPixels / 4
 
-        fading(rect1, 0, 1);
+        fading(rect1, 0, 1, typeMessage);
 
         hello();
 
-        var txt = text1.text;
-        text1.text = ''
-        var speed = 50;
-        var i = 0;
-        function typeWriter() {
-            if (i < txt.length) {
-                text1.text += txt.charAt(i);
-                i++;
-                setTimeout(typeWriter, speed);
-            } else if (i == txt.length) {
-                fading(button, 0, 1);
-            }
-        }
-        typeWriter()
+
     });
 
     BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
@@ -1205,7 +1191,7 @@ function zoomIn() {
     });
 }
 
-function fading(container, start, end) {
+function fading(container, start, end, callback) {
 
     var animationBox = new BABYLON.Animation("fading", "alpha", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
 
@@ -1227,5 +1213,26 @@ function fading(container, start, end) {
     animationBox.setKeys(keys);
     container.animations = [];
     container.animations.push(animationBox);
-    scene.beginAnimation(container, 0, 100);
+    scene.beginAnimation(container, 0, 100, false, 1, function () {
+        if (callback && typeof (callback) === "function") {
+            callback();
+        }
+    });
+
+}
+
+function typeMessage() {
+    text1.text = ''
+    var speed = 50;
+    var i = 0;
+    function typeWriter() {
+        if (i < txt.length) {
+            text1.text += txt.charAt(i);
+            i++;
+            setTimeout(typeWriter, speed);
+        } else if (i == txt.length) {
+            fading(button, 0, 1);
+        }
+    }
+    typeWriter()
 }

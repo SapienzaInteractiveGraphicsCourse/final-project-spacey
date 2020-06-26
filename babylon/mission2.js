@@ -5,11 +5,19 @@ var pl;
 var loaded = false;
 var bonesOffset = [];
 var actualBones = [];
-var currentPosition = new BABYLON.Vector3(-10, -22, -10);
-var cameraPosition = new BABYLON.Vector3(0, 50, 0);
+var currentPosition = new BABYLON.Vector3(0, 20, 0);
+var targetPosition = new BABYLON.Vector3(20, 20, 150);
+var cameraPosition = new BABYLON.Vector3(0, 100, 0);
 var camera;
 var ground;
 var boy;
+var rect1;
+var panel;
+var rect2;
+var text1;
+var img;
+var button;
+var txt = "MISSION 2: The rover fell down the Mars Valles, find it and fix it.";
 
 function radians(deg) { return deg * Math.PI / 180; }
 
@@ -36,6 +44,98 @@ var createScene = function () {
     dirLight.shadowMaxZ = 3000;
     dirLight.shadowMinZ = 1;
 
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+
+    rect1 = new BABYLON.GUI.Rectangle();
+    rect1.height = 0.3;
+    rect1.width = 0.7;
+    rect1.cornerRadius = 20;
+    rect1.color = "Orange";
+    advancedTexture.addControl(rect1);
+
+    panel = new BABYLON.GUI.StackPanel();
+    rect1.addControl(panel);
+
+    text1 = new BABYLON.GUI.TextBlock();
+    text1.height = "80px";
+    text1.width = 1;
+    text1.color = "Orange";
+    text1.fontSize = 24;
+    panel.addControl(text1);
+
+    button = BABYLON.GUI.Button.CreateImageWithCenterTextButton("button", "START");
+    button.width = 0.3;
+    button.height = "40px";
+    button.cornerRadius = 20;
+    button.color = "Orange";
+    button.fontSize = 24;
+    button.alpha = 0;
+    panel.addControl(button);
+
+    button.onPointerUpObservable.add(function () {
+        fading(button, 1, 0);
+        fading(rect1, 1, 0, zoomIn);
+    });
+
+    rect2 = new BABYLON.GUI.Rectangle();
+    rect2.height = 0.2;
+    rect2.width = 0.1;
+    rect2.cornerRadius = 30;
+    rect2.color = "Orange";
+    rect2.left = '40%';
+    rect2.top = '30%';
+    rect2.alpha = 0;
+    advancedTexture.addControl(rect2);
+
+
+    img = new BABYLON.GUI.Image("", "../images/heightmars.png");
+    img.width = 1.1;
+    img.height = 1.1;
+    img.alpha = 0.5;
+    rect2.addControl(img);
+
+    var pos1 = new BABYLON.GUI.Rectangle();
+    pos1.height = "10px";
+    pos1.width = "10px";
+    pos1.background = "Orange";
+    rect2.addControl(pos1);
+
+    var pos2 = new BABYLON.GUI.Rectangle();
+    pos2.height = "10px";
+    pos2.width = "10px";
+    pos2.background = "Green";
+    rect2.addControl(pos2);
+
+    var rect3 = new BABYLON.GUI.Rectangle();
+    rect3.height = 0.20;
+    rect3.width = 0.85;
+    rect3.cornerRadius = 30;
+    rect3.background = "Gray";
+    rect3.color = "Orange";
+    rect3.top = '-35%';
+    rect2.addControl(rect3);
+
+    var panel2 = new BABYLON.GUI.StackPanel();
+    rect3.addControl(panel2);
+
+    var text2 = new BABYLON.GUI.TextBlock();
+    text2.text = "you: x: y:";
+    text2.height = "15px";
+    text2.width = 1;
+    text2.color = "Orange";
+    text2.fontSize = 12;
+    panel2.addControl(text2);
+
+    var text3 = new BABYLON.GUI.TextBlock();
+    text3.text = "target: x: y:";
+    text3.height = "15px";
+    text3.width = 1;
+    text3.color = "Green";
+    text3.fontSize = 12;
+    panel2.addControl(text3);
+    //targetPosition
+
     // var pointLight = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 100, -200), scene);
     // pointLight.intensity = 0.5;
     // pointLight.diffuse = new BABYLON.Color3(1, 1, 1);
@@ -46,7 +146,7 @@ var createScene = function () {
     var godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, camera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
     godrays.mesh.material.diffuseTexture.hasAlpha = true;
-    godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
+    godrays.mesh.position = new BABYLON.Vector3(200, 100, -200);
     godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
     dirLight.position = godrays.mesh.position;
     //camera.setTarget(scene.getMeshByName("godrays"));
@@ -73,49 +173,74 @@ var createScene = function () {
     //shadowGenerator.setDarkness(0.4);
 
     // Skybox
+    // var skybox = BABYLON.Mesh.CreateSphere("sphere", 10, 500, scene);
+    // var skyboxMaterial = new BABYLON.GradientMaterial("galaxy", scene);
+    // skyboxMaterial.bottomColor = new BABYLON.Color3(0.9, 0.65, 0);
+    // skyboxMaterial.topColor = new BABYLON.Color3(0.9, 0.64, 0);
+    // skyboxMaterial.offset = -100;
+    // skyboxMaterial.smoothness = 0.5;
+    // skyboxMaterial.disableLighting = true;
+    // skyboxMaterial.backFaceCulling = false;
+    // skybox.position = new BABYLON.Vector3(0, 0, 0);
+    // skybox.material = skyboxMaterial;
+
+
     var skybox = BABYLON.Mesh.CreateBox("galaxy", 500.0, scene);
     var skyboxMaterial = new BABYLON.StandardMaterial("galaxyMaterial", scene);
     skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new BABYLON.Texture("../images/galaxy.png", scene, true);
+    skyboxMaterial.reflectionTexture = new BABYLON.Texture("../images/orange.jpg", scene, true);
     skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
     skyboxMaterial.disableLighting = true;
     skybox.material = skyboxMaterial;
 
-
-    var earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 10 }, scene);
-    earth.position = new BABYLON.Vector3(200, 100, -100);
-    earth.rotation = new BABYLON.Vector3(0, 0, 23.5);
-    var earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
-    //earthMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
-    //earthMaterial.ambientColor = new BABYLON.Color3(1, 1, 1);
-    earthMaterial.specularColor = new BABYLON.Color3(135 / 255, 206 / 255, 250 / 255);
-    earth.material = earthMaterial;
-    earth.material.diffuseTexture = new BABYLON.Texture("../images/earth.png", scene);
+    BABYLON.SceneLoader.ImportMesh("Mars Valles Mar", "../models/", "mars4.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
 
-    BABYLON.SceneLoader.Append("../models/", "l1_new_big.glb", scene, function (newMeshes) {
-        ground = scene.getMeshByName("Gale Crater");
+        ground = scene.getMeshByName("Mars Valles Mar");
+
         ground.position = new BABYLON.Vector3(0, 0, 0);
-        var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
-        groundMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
-        ground.material = groundMaterial;
+        ground.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+
+        //var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+        //groundMaterial.diffuseTexture = new BABYLON.Texture("../models/8k_mars.jpg", scene);
+        //groundMaterial.diffuseTexture.coordinatesMode = BABYLON.Texture.spherical_mode;
+        //groundMaterial.diffuseTexture.level = 0.5
+        //groundMaterial.bumpTexture = new BABYLON.Texture("../models/8k_mars_bump.jpg", scene);
+        //groundMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        //ground.material = groundMaterial;
         shadowGenerator.addShadowCaster(ground);
         shadowGenerator.getShadowMap().renderList.push(ground);
         ground.receiveShadows = true;
         //finally, say which mesh will be collisionable
         ground.checkCollisions = true;
+
+        var widthGround = ground.getBoundingInfo().boundingBox.extendSize.x * 2
+        var heightGround = ground.getBoundingInfo().boundingBox.extendSize.z * 2
+
+        var widthGround = ground.getBoundingInfo().boundingBox.extendSize.x * 2
+        var heightGround = ground.getBoundingInfo().boundingBox.extendSize.z * 2
+
+        pos1.left = boy.position.x / widthGround * img.widthInPixels / 4
+        pos1.top = boy.position.z / heightGround * img.heightInPixels / 4
+
+        pos2.left = targetPosition.x / widthGround * img.widthInPixels / 4
+        pos2.top = targetPosition.z / heightGround * img.heightInPixels / 4
+
+        fading(rect1, 0, 1, typeMessage);
+
+        hello();
     });
 
-    BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
-        var nav = scene.getMeshByName("MMSEV");
-        nav.position = new BABYLON.Vector3(-5, -18, -20);
-        nav.scaling = new BABYLON.Vector3(2, 2, 2);
-        shadowGenerator.addShadowCaster(nav);
-        shadowGenerator.getShadowMap().renderList.push(nav);
-        nav.receiveShadows = true;
-        nav.checkCollisions = true;
+    // BABYLON.SceneLoader.Append("../models/", "nav.glb", scene, function (newMeshes) {
+    //     var nav = scene.getMeshByName("MMSEV");
+    //     nav.position = new BABYLON.Vector3(-5, -18, -20);
+    //     nav.scaling = new BABYLON.Vector3(2, 2, 2);
+    //     shadowGenerator.addShadowCaster(nav);
+    //     shadowGenerator.getShadowMap().renderList.push(nav);
+    //     nav.receiveShadows = true;
+    //     nav.checkCollisions = true;
 
-    });
+    // });
 
     BABYLON.SceneLoader.ImportMesh("ACES", "../models/", "ACES2.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
@@ -214,12 +339,6 @@ var createScene = function () {
 
     return scene;
 };
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    zoomIn();
-
-}, false);
 
 var scene = createScene();
 
@@ -969,7 +1088,7 @@ function standAnimation(parts) {
     return standGroup;
 }
 
-function zoomIn() {
+function hello() {
 
     //for camera move forward
     var movein = new BABYLON.Animation(
@@ -987,8 +1106,34 @@ function zoomIn() {
         value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 200))
     });
     movein_keys.push({
-        frame: 50,
-        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 190))
+        frame: 400,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 160))
+    });
+
+    movein.setKeys(movein_keys);
+
+    camera.animations = [];
+    camera.animations.push(movein);
+
+    scene.beginAnimation(camera, 0, 400, false, 1, function () {
+    });
+}
+function zoomIn() {
+
+    //for camera move forward
+    var movein = new BABYLON.Animation(
+        "movein",
+        "position",
+        30,
+        BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+
+    var movein_keys = [];
+
+    movein_keys.push({
+        frame: 0,
+        value: cameraPosition.clone().add(new BABYLON.Vector3(-100, -25, 160))
     });
     movein_keys.push({
         frame: 180,
@@ -1028,9 +1173,6 @@ function zoomIn() {
     //     frame: 200,
     //     value: camera.rotation.y - Math.PI * 2
     // });
-
-
-
     // rotate.setKeys(rotate_keys);
 
     camera.animations = [];
@@ -1038,6 +1180,7 @@ function zoomIn() {
     camera.animations.push(movein);
 
     scene.beginAnimation(camera, 0, 200, false, 1, function () {
+        fading(rect2, 0, 1);
 
         camera = new BABYLON.ArcRotateCamera("camera1", 0, 0, 0, camera.position, scene);
         camera.attachControl(canvas, true);
@@ -1049,9 +1192,57 @@ function zoomIn() {
         //Then apply collisions and gravity to the active camera
         camera.checkCollisions = true;
         camera.applyGravity = true;
+
+        rect1.dispose();
         //Set the ellipsoid around the camera (e.g. your player's size)
         //camera.ellipsoid = new BABYLON.Vector3(1, 5, 1);
         camera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
+
     });
 }
 
+function fading(container, start, end, callback) {
+
+    var animationBox = new BABYLON.Animation("fading", "alpha", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+    // An array with all animation keys
+    var keys = [];
+
+    //At the animation key 0, the value of scaling is "1"
+    keys.push({
+        frame: 0,
+        value: start
+    });
+
+    //At the animation key 100, the value of scaling is "1"
+    keys.push({
+        frame: 100,
+        value: end
+    });
+
+    animationBox.setKeys(keys);
+    container.animations = [];
+    container.animations.push(animationBox);
+    scene.beginAnimation(container, 0, 100, false, 1, function () {
+        if (callback && typeof (callback) === "function") {
+            callback();
+        }
+    });
+
+}
+
+function typeMessage() {
+    text1.text = ''
+    var speed = 50;
+    var i = 0;
+    function typeWriter() {
+        if (i < txt.length) {
+            text1.text += txt.charAt(i);
+            i++;
+            setTimeout(typeWriter, speed);
+        } else if (i == txt.length) {
+            fading(button, 0, 1);
+        }
+    }
+    typeWriter()
+}
