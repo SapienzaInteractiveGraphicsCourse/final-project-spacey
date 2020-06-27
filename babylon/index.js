@@ -182,7 +182,7 @@ let createScene = function () {
 
     var messageContainer = new BABYLON.GUI.Rectangle();
     messageContainer.left = '30%';
-    messageContainer.top = '30%';
+    messageContainer.top = '25%';
     messageContainer.height = 0.2;
     messageContainer.width = 0.3;
     messageContainer.cornerRadius = 20;
@@ -228,7 +228,32 @@ let createScene = function () {
     var planetUranus = createPlanet(uranus);
     var planetNeptune = createPlanet(neptune);
 
+    var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "Commands");
+    buttonC.left = '15%';
+    buttonC.top = '45%';
+    buttonC.width = 0.2;
+    buttonC.height = "40px";
+    buttonC.color = "orange";
+    buttonC.fontSize = 32;
+    //buttonC.background = "green";
+    buttonC.cornerRadius = 20;
+    buttonC.onPointerUpObservable.add(function(){
+        window.location.href = "command.html";
+    }); 
+    advancedTexture.addControl(buttonC); 
 
+    var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "Story");
+    buttonS.left = '40%';
+    buttonS.top = '45%';
+    buttonS.width = 0.2;
+    buttonS.height = "40px";
+    buttonS.color = "orange";
+    buttonS.fontSize = 32;
+    buttonS.cornerRadius = 20;
+    buttonS.onPointerUpObservable.add(function(){
+        window.location.href = "story.html";
+    }); 
+    advancedTexture.addControl(buttonS); 
 
     scene.shadowsEnabled = true;
 
