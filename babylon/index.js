@@ -4,7 +4,6 @@ var camera;
 var advancedTexture;
 var text2;
 var text3;
-function radians(deg) { return deg * Math.PI / 180; }
 
 let createScene = function () {
     var play = 1;
@@ -233,12 +232,12 @@ let createScene = function () {
 
     scene.shadowsEnabled = true;
 
-    camera = new BABYLON.ArcRotateCamera("Camera", radians(300),
-        radians(80), 60, planetEarth.position, scene);
+    camera = new BABYLON.ArcRotateCamera("Camera", BABYLON.Tools.ToRadians(300),
+        BABYLON.Tools.ToRadians(80), 60, planetEarth.position, scene);
     //camera.attachControl(canvas, true);
 
-    BABYLON.SceneLoader.ImportMesh("ACES", "../models/", "ACES2.babylon", scene, function (newMeshes, particleSystems, skeletons) {
-        let boy = scene.getMeshByName("ACES");
+    BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "ACES2.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+        let boy = scene.getMeshByName("Boy");
         boy.position = camera.position.clone().add(new BABYLON.Vector3(-1.3, -2.2, 1));
         boy.rotation.y = Math.PI
         boy.scaling = new BABYLON.Vector3(1.3, 1.2, 1.2)
