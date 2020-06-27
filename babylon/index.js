@@ -4,13 +4,38 @@ var camera;
 var advancedTexture;
 var text2;
 var text3;
+var optimizer;
 
 let createScene = function () {
+    engine.setHardwareScalingLevel(1);
+    let scene = new BABYLON.Scene(engine);
+
+    var result = new BABYLON.SceneOptimizerOptions(60, 2000);
+    result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    var priority = 0;
+    result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
+    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
+    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
+    //result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    optimizer = new BABYLON.SceneOptimizer(scene, result);
+
+
     var play = 1;
     // Init engine
 
     // Init scene
-    var scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color3(0, 0, 0);
 
     // Camera
@@ -237,10 +262,10 @@ let createScene = function () {
     buttonC.fontSize = 32;
     //buttonC.background = "green";
     buttonC.cornerRadius = 20;
-    buttonC.onPointerUpObservable.add(function(){
+    buttonC.onPointerUpObservable.add(function () {
         window.location.href = "command.html";
-    }); 
-    advancedTexture.addControl(buttonC); 
+    });
+    advancedTexture.addControl(buttonC);
 
     var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "Story");
     buttonS.left = '40%';
@@ -250,10 +275,10 @@ let createScene = function () {
     buttonS.color = "orange";
     buttonS.fontSize = 32;
     buttonS.cornerRadius = 20;
-    buttonS.onPointerUpObservable.add(function(){
+    buttonS.onPointerUpObservable.add(function () {
         window.location.href = "story.html";
-    }); 
-    advancedTexture.addControl(buttonS); 
+    });
+    advancedTexture.addControl(buttonS);
 
     scene.shadowsEnabled = true;
 
@@ -354,6 +379,7 @@ engine.runRenderLoop(function () {
 
 scene.executeWhenReady(function () {
     fading(text2, 30, 1, 0);
+    optimizer.start();
     typeWriter()
 })
 

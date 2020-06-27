@@ -20,12 +20,37 @@ let godrays;
 let dirLight;
 let widthGround;
 let heightGround;
-
+var optimizer;
 let createScene = function () {
+    engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
+
+    var result = new BABYLON.SceneOptimizerOptions(60, 2000);
+    result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    var priority = 0;
+    result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
+    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
+    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
+    //result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    optimizer = new BABYLON.SceneOptimizer(scene, result);
+
     scene.shadowsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, GRAVITY, 0);
     scene.collisionsEnabled = true;
+    scene.autoClear = false; // Color buffer
+    scene.autoClearDepthAndStencil = false; // Depth and stencil, obviously
 
     CoT = new BABYLON.TransformNode("root");
 
@@ -63,9 +88,13 @@ let createScene = function () {
     godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, farCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
     godrays.mesh.material.diffuseTexture.hasAlpha = true;
+    godrays.mesh.material.freeze();
     godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
     godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
     dirLight.position = godrays.mesh.position;
+    godrays.mesh.freezeWorldMatrix();
+    godrays.mesh.doNotSyncBoundingInfo = true;
+
 
     // Shadows
     let shadowGenerator = new BABYLON.ShadowGenerator(5000, dirLight);
@@ -76,13 +105,19 @@ let createScene = function () {
     shadowGenerator.bias = 0.00001;
 
     // Skybox
-    let skybox = BABYLON.Mesh.CreateBox("galaxy", 500.0, scene);
+    let skybox = BABYLON.Mesh.CreateSphere("galaxy", 10, 500.0, scene);
     let skyboxMaterial = new BABYLON.StandardMaterial("galaxyMaterial", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.Texture(SKY_PATH, scene, true);
     skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
     skyboxMaterial.disableLighting = true;
     skybox.material = skyboxMaterial;
+    skybox.material.freeze();
+    skybox.freezeWorldMatrix();
+    skybox.doNotSyncBoundingInfo = true;
+    skybox.convertToUnIndexedMesh();
+
+
 
     if (EARTH) {
         let earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 10 }, scene);
@@ -92,6 +127,10 @@ let createScene = function () {
         earthMaterial.reflectionTexture = new BABYLON.Texture("../images/earth.jpg", scene, true);
         earthMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
         earth.material = earthMaterial;
+        earth.material.freeze();
+        earth.freezeWorldMatrix();
+        earth.doNotSyncBoundingInfo = true;
+        earth.convertToUnIndexedMesh();
     }
 
     BABYLON.SceneLoader.ImportMesh("Map", "../models/", MAP_PATH, scene, function (newMeshes, particleSystems, skeletons) {
@@ -102,6 +141,9 @@ let createScene = function () {
         shadowGenerator.getShadowMap().renderList.push(ground);
         ground.receiveShadows = true;
         ground.checkCollisions = true;
+        ground.material.freeze();
+        ground.freezeWorldMatrix();
+        //ground.doNotSyncBoundingInfo = true; //uncomment only if not use physics
     });
 
 
@@ -113,6 +155,9 @@ let createScene = function () {
         shadowGenerator.getShadowMap().renderList.push(nav);
         nav.receiveShadows = true;
         nav.checkCollisions = true;
+        nav.material.freeze();
+        nav.freezeWorldMatrix();
+        nav.doNotSyncBoundingInfo = true;
     });
 
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", BOY_PATH, scene, function (newMeshes, particleSystems, skeletons) {
@@ -124,6 +169,9 @@ let createScene = function () {
         boy.applyGravity = true;
         boy.ellipsoid = new BABYLON.Vector3(.6, 1.14, .6);
         boy.ellipsoidOffset = new BABYLON.Vector3(0, 0, 0);
+        boy.material.freeze();
+        boy.alwaysSelectAsActiveMesh = true
+        //boy.doNotSyncBoundingInfo = true; //uncomment only if not use physics
         actualBones = {
             "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
             "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
@@ -198,10 +246,11 @@ let createScene = function () {
     farCamera.collisionRadius = new BABYLON.Vector3(2, 2, 2);
     return scene;
 };
-
 let scene = createScene();
 
 scene.executeWhenReady(function () {
+    scene.blockMaterialDirtyMechanism = true;
+    optimizer.start();
     showGUI();
 })
 
@@ -1015,12 +1064,7 @@ function fastZoom() {
         nearCamera.target = boy.position.clone().add(new BABYLON.Vector3(0, 2, 0))
         nearCamera.attachControl(canvas, true);
         scene.activeCamera = nearCamera;
-        godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, nearCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
-        godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
-        godrays.mesh.material.diffuseTexture.hasAlpha = true;
-        godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
-        godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
-        dirLight.position = godrays.mesh.position;
+        godrays.dispose(farCamera);
         farCamera.dispose();
         CoT.dispose();
         messageContainer.dispose();
