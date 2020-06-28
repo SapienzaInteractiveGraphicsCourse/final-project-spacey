@@ -7,6 +7,7 @@ var text3;
 var optimizer;
 
 let createScene = function () {
+    engine.displayLoadingUI();
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
 
@@ -213,10 +214,10 @@ let createScene = function () {
 
     var text1 = new BABYLON.GUI.TextBlock();
     text1.text = 'Space Y'
-    text1.height = "60px";
+    text1.height = "40px";
     text1.width = 1;
     text1.color = "Orange";
-    text1.fontSize = 36;
+    text1.fontSize = 30;
     panel.addControl(text1);
 
     text2 = new BABYLON.GUI.TextBlock();
@@ -247,32 +248,38 @@ let createScene = function () {
     var planetUranus = createPlanet(uranus);
     var planetNeptune = createPlanet(neptune);
 
+    var buttonContainer = new BABYLON.GUI.Rectangle();
+    buttonContainer.left = '30%';
+    buttonContainer.top = '40%';
+    buttonContainer.height = 0.1;
+    buttonContainer.width = 0.3;
+    buttonContainer.thickness = 0;
+    advancedTexture.addControl(buttonContainer);
+
     var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "Commands");
-    buttonC.left = '15%';
-    buttonC.top = '45%';
-    buttonC.width = 0.2;
+    buttonC.left = '-25%';
+    buttonC.width = 0.40;
     buttonC.height = "40px";
     buttonC.color = "orange";
-    buttonC.fontSize = 32;
+    buttonC.fontSize = 24;
     //buttonC.background = "green";
     buttonC.cornerRadius = 20;
     buttonC.onPointerUpObservable.add(function () {
         window.location.href = "command.html";
     });
-    advancedTexture.addControl(buttonC);
+    buttonContainer.addControl(buttonC);
 
     var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "Story");
-    buttonS.left = '40%';
-    buttonS.top = '45%';
-    buttonS.width = 0.2;
+    buttonS.left = '25%';
+    buttonS.width = 0.40;
     buttonS.height = "40px";
     buttonS.color = "orange";
-    buttonS.fontSize = 32;
+    buttonS.fontSize = 24;
     buttonS.cornerRadius = 20;
     buttonS.onPointerUpObservable.add(function () {
         window.location.href = "story.html";
     });
-    advancedTexture.addControl(buttonS);
+    buttonContainer.addControl(buttonS);
 
     scene.shadowsEnabled = true;
 
@@ -372,6 +379,7 @@ engine.runRenderLoop(function () {
 });
 
 scene.executeWhenReady(function () {
+    engine.hideLoadingUI();
     fading(text2, 30, 1, 0);
     optimizer.start();
     typeWriter()
@@ -414,8 +422,8 @@ function addLabel(mesh) {
     }
 
     var target = new BABYLON.GUI.Ellipse();
-    target.width = "5px";
-    target.height = "5px";
+    target.width = "7px";
+    target.height = "7px";
     target.color = color;
     target.thickness = 1;
     target.background = color;
@@ -423,10 +431,9 @@ function addLabel(mesh) {
     target.linkWithMesh(mesh);
 
     var line = new BABYLON.GUI.Line();
-    line.lineWidth = 4;
+    line.lineWidth = 3;
     line.color = color;
     line.y2 = up_down * 20;
-    line.linkOffsetY = up_down * -10;
     advancedTexture.addControl(line);
     line.linkWithMesh(mesh);
     line.connectedControl = rect1;

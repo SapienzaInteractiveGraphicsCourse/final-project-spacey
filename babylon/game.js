@@ -22,6 +22,7 @@ let widthGround;
 let heightGround;
 var optimizer;
 let createScene = function () {
+    engine.displayLoadingUI();
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
 
@@ -217,7 +218,6 @@ let createScene = function () {
         let walking = walkAnimation(actualBones)
         let jumping = jumpAnimation(actualBones)
         let standing = standAnimation(actualBones)
-        let frame = 0;
         document.addEventListener('keydown', function (event) {
 
 
@@ -251,6 +251,7 @@ let createScene = function () {
     scene.shadowsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -1.62, 0);
     scene.collisionsEnabled = true;
+    scene.blockMaterialDirtyMechanism = true;
     farCamera.checkCollisions = true;
     farCamera.applyGravity = true;
     farCamera.collisionRadius = new BABYLON.Vector3(2, 2, 2);
@@ -259,8 +260,8 @@ let createScene = function () {
 let scene = createScene();
 
 scene.executeWhenReady(function () {
-    scene.blockMaterialDirtyMechanism = true;
     optimizer.start();
+    engine.hideLoadingUI();
     showGUI();
 })
 
