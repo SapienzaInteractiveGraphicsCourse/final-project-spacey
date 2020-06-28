@@ -169,7 +169,7 @@ var createScene = function () {
         ground.checkCollisions = true;
         
         //Stone 
-        var stone = BABYLON.MeshBuilder.CreateSphere("Stone", {diameter: 2, diameterY: 3}, scene);
+        var stone = BABYLON.MeshBuilder.CreateSphere("Stone", {diameter: 1.5, diameterY: 2.5}, scene);
         stone.position = new BABYLON.Vector3(5, 1, 10);
         var stoneMat = new BABYLON.StandardMaterial("stoneMat", scene);
         stoneMat.diffuseTexture = new BABYLON.Texture("../images/stone1.jpeg", scene);
@@ -264,10 +264,9 @@ var createScene = function () {
         if (flagGb) {
             
             h2.addMesh(stone, BABYLON.Color3.Red());
-            stone.position.x = boy.position.x-0.25;
+            stone.position.x = boy.position.x + impulseDirection.x;
             stone.position.y = boy.position.y + 3;
-            stone.position.z = boy.position.z + 1.75;
-            stone.rotation = boy.rotation;
+            stone.position.z = boy.position.z + impulseDirection.z;
         }
 
         if ( (boy.position.subtract(stone.position).length()) <5 && !flagGb) {
