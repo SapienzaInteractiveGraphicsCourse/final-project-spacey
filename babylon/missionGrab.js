@@ -6,29 +6,29 @@ var actualBones = [];
 
 function toRad(deg) { return deg * Math.PI / 180; }
 
-function rotateVector(vect, rot) {
+function rotateVector(vect, rot) {    
     var matr = new BABYLON.Matrix();
-    var quat = BABYLON.Quaternion.FromEulerAngles(0, rot, 0);
+    var quat = BABYLON.Quaternion.FromEulerAngles(0, rot , 0);
     quat.toRotationMatrix(matr);
     var rotatedvect = BABYLON.Vector3.TransformCoordinates(vect, matr);
     return rotatedvect;
 }
 
 BABYLON.Mesh.prototype.ellipsoidMesh = undefined;
-BABYLON.Mesh.prototype.showEllipsoid = function (scene) {
+BABYLON.Mesh.prototype.showEllipsoid = function(scene) {
 
     if (!this.isEnabled()) return;
 
-    this.refreshBoundingInfo();
+    this.refreshBoundingInfo();    
 
-    var sphere = BABYLON.MeshBuilder.CreateSphere("elli", {
+    var sphere = BABYLON.MeshBuilder.CreateSphere("elli", { 
         diameterX: this.ellipsoid.x * 2,
         diameterZ: this.ellipsoid.z * 2,
         diameterY: this.ellipsoid.y * 2
-    },
-        scene);
+        },
+    scene);
 
-    //    sphere.position = this.position.add(this.ellipsoidOffset);
+//    sphere.position = this.position.add(this.ellipsoidOffset);
     sphere.position = this.getAbsolutePosition().add(this.ellipsoidOffset);
 
     this.ellipsoidMesh = sphere;
@@ -48,8 +48,8 @@ BABYLON.Mesh.prototype.showEllipsoid = function (scene) {
     sphere.visibility = .1;
 }
 
-BABYLON.Mesh.prototype.setEllipsoidPerBoundingBox = function (scene) {
-
+BABYLON.Mesh.prototype.setEllipsoidPerBoundingBox = function(scene) {
+    
     var bi = this.getBoundingInfo();
     // console.log("bi: ", bi);
 
@@ -71,7 +71,7 @@ var createScene = function () {
     engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
-
+    
     scene.gravity = new BABYLON.Vector3(0, -9.8, 0);
     scene.collisionsEnabled = true;
 
@@ -88,7 +88,7 @@ var createScene = function () {
     BABYLON.SceneLoader.ImportMesh("MMSEV", "../models/babylonFiles/", "nav.babylon", scene, function (newMeshes) {
         var nav = scene.getMeshByName("MMSEV");
         //nav.position = new BABYLON.Vector3(0, 5, 0);
-        nav.rotate(BABYLON.Axis.Y, Math.PI / 2, BABYLON.Space.WORLD);
+        nav.rotate(BABYLON.Axis.Y, Math.PI/2, BABYLON.Space.WORLD);
         //shadowGenerator.getShadowMap().renderList.push(nav);
         nav.applyGravity = true;
         nav.checkCollisions = true;
@@ -98,47 +98,47 @@ var createScene = function () {
         nav.setEllipsoidPerBoundingBox(scene);
         nav.showEllipsoid(scene);
         nav.visibility = .99;
-
+        
         //Create Path for Path following
         var points = [];
-        var n = 600;
+        var n = 600; 
         var r = 40; //radius
-        for (var i = 0; i < 2 * n + 1; i++) {
-            points.push(new BABYLON.Vector3((r) * Math.cos(i * Math.PI / n), 0, (r) * Math.sin(i * Math.PI / n)));
-        }
+        for (var i = 0; i < 2*n + 1; i++) {
+            points.push( new BABYLON.Vector3( (r)*Math.cos(i*Math.PI/n), 0, (r)*Math.sin(i*Math.PI/n)));
+        }    
 
-        /*        var track = BABYLON.MeshBuilder.CreateLines('track', {points: points}, scene);
-                track.color = new BABYLON.Color3(0, 0, 0);*/
+/*        var track = BABYLON.MeshBuilder.CreateLines('track', {points: points}, scene);
+        track.color = new BABYLON.Color3(0, 0, 0);*/
 
         nav.position.y = 2;
         nav.position.z = r;
         nav.ellipsoidMesh.position = nav.position.add(nav.ellipsoidOffset);
         var path3d = new BABYLON.Path3D(points);
         var normals = path3d.getNormals();
-        var theta = Math.acos(BABYLON.Vector3.Dot(BABYLON.Axis.Z, normals[0]));
+        var theta = Math.acos(BABYLON.Vector3.Dot(BABYLON.Axis.Z,normals[0]));
         nav.rotate(BABYLON.Axis.Y, theta, BABYLON.Space.WORLD);
+    
+/*        var i=0;
+        scene.registerAfterRender(function() {
+        nav.position.x = points[i].x;
+        nav.position.z = points[i].z;
 
-        /*        var i=0;
-                scene.registerAfterRender(function() {
-                nav.position.x = points[i].x;
-                nav.position.z = points[i].z;
-
-
-                theta = Math.acos(BABYLON.Vector3.Dot(normals[i],normals[i+1]));
-                var dir = BABYLON.Vector3.Cross(normals[i],normals[i+1]).y;
-                var dir = dir/Math.abs(dir);
-                nav.rotate(BABYLON.Axis.Y, dir * theta, BABYLON.Space.WORLD);
-                nav.ellipsoidMesh.position = nav.position.add(nav.ellipsoidOffset);
-                nav.ellipsoidMesh.rotation = nav.rotation;
-                i = (i + 1) % (2*n-1);
-                }); */
+         
+        theta = Math.acos(BABYLON.Vector3.Dot(normals[i],normals[i+1]));
+        var dir = BABYLON.Vector3.Cross(normals[i],normals[i+1]).y;
+        var dir = dir/Math.abs(dir);
+        nav.rotate(BABYLON.Axis.Y, dir * theta, BABYLON.Space.WORLD);
+        nav.ellipsoidMesh.position = nav.position.add(nav.ellipsoidOffset);
+        nav.ellipsoidMesh.rotation = nav.rotation;
+        i = (i + 1) % (2*n-1);  
+        }); */  
         //camera.lockedTarget = nav;
     });
 
 
-    BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+    BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
-        boy = scene.getMeshByName("Boy");
+        boy = scene.getMeshByName("Z2");
         //boy.position = new BABYLON.Vector3(-20, 3, 10);
         boy.scaling = new BABYLON.Vector3(3, 3, 3);
         boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD); //so that object launches aligned with conventional world axis
@@ -157,7 +157,7 @@ var createScene = function () {
 
         camera.lockedTarget = boy;
         // Ground (using a box not a plane)
-        ground = BABYLON.MeshBuilder.CreateBox("Ground", { width: 200, height: 0.1, depth: 200 }, scene);
+        ground = BABYLON.MeshBuilder.CreateBox("Ground", {width: 200, height: 0.1, depth: 200}, scene);
 
         var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
         groundMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
@@ -167,9 +167,9 @@ var createScene = function () {
         ground.material = groundMat;
         ground.receiveShadows = true;
         ground.checkCollisions = true;
-
-        //Stone
-        var stone = BABYLON.MeshBuilder.CreateSphere("Stone", { diameter: 2, diameterY: 3 }, scene);
+        
+        //Stone 
+        var stone = BABYLON.MeshBuilder.CreateSphere("Stone", {diameter: 1.5, diameterY: 2.5}, scene);
         stone.position = new BABYLON.Vector3(5, 1, 10);
         var stoneMat = new BABYLON.StandardMaterial("stoneMat", scene);
         stoneMat.diffuseTexture = new BABYLON.Texture("../images/stone1.jpeg", scene);
@@ -196,100 +196,99 @@ var createScene = function () {
                     switch (kbInfo.event.key) {
                         //Rotate Left by an amgle specified by turnboi
                         case "a":
-                        case "A":
+                        case "A":        
                             boy.rotate(BABYLON.Axis.Y, -turnboi, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, -turnboi);
                             boy.nextspeed = rotateVector(boy.nextspeed, -turnboi);
                             boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
-                            break
+                        break
 
                         //Rotate Right by an amgle specified by turnboi
                         case "d":
-                        case "D":
+                        case "D":            
                             boy.rotate(BABYLON.Axis.Y, turnboi, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, turnboi);;
                             boy.nextspeed = rotateVector(boy.nextspeed, turnboi);
                             boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
-                            break
+                        break
 
                         //Apply impulse
                         case "w":
                         case "W":
                             flagImp = 1;
                             console.log("Velocity applied!!!");
-                            boy.nextspeed.x = v * impulseDirection.x;
-                            boy.nextspeed.z = v * impulseDirection.z;
+                            boy.nextspeed.x = v*impulseDirection.x;
+                            boy.nextspeed.z = v*impulseDirection.z;
 
                             boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
                             //boy.moveWithCollisions(boy.speed);
                             walkAnimation(actualBones).play(true);
-                            break
+                        break
 
                         //Stop || Remove impulse
                         case "s":
-                        case "S":
+                        case "S":                        
                             flagImp = 0;
-                            boy.nextspeed.x = 0;
+                            boy.nextspeed.x = 0; 
                             boy.nextspeed.z = 0;
                             console.log("Key S|s pressed.....Stop!");
                             standAnimation(actualBones).play(true);
-                            break
+                        break
 
                         //Grab
                         case "q":
-                        case "Q":
+                        case "Q":                        
                             flagQ = 1;
                             //Grab()
                             //grabAnimation(actualBones).play(true);
                             console.log("Key Q|q pressed.....Grab!");
-                            break
+                        break
 
                         //Drop
-                        /*                        case "e":
-                                                case "E":
-                                                    //flagQ = 1;
-                                                    console.log("Key E|e pressed.....Drop!");
-                                                break*/
+/*                        case "e":
+                        case "E":                        
+                            //flagQ = 1;
+                            console.log("Key E|e pressed.....Drop!");
+                        break*/
                     }
-                    break;
-            }
+                break;
+            }          
         });
 
         scene.registerAfterRender(function () {
-            if (flagImp) {
-                boy.moveWithCollisions(boy.speed);
-                boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
-            }
+        if (flagImp) {
+            boy.moveWithCollisions(boy.speed);
+            boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
+        }
 
-            if (flagGb) {
+        if (flagGb) {
+            
+            h2.addMesh(stone, BABYLON.Color3.Red());
+            stone.position.x = boy.position.x + impulseDirection.x;
+            stone.position.y = boy.position.y + 3;
+            stone.position.z = boy.position.z + impulseDirection.z;
+        }
 
-                h2.addMesh(stone, BABYLON.Color3.Red());
-                stone.position.x = boy.position.x - 0.25;
-                stone.position.y = boy.position.y + 3;
-                stone.position.z = boy.position.z + 1.75;
-                stone.rotation = boy.rotation;
+        if ( (boy.position.subtract(stone.position).length()) <5 && !flagGb) {
+            hl.addMesh(stone, BABYLON.Color3.Green());
+            if(flagQ) {
+                Grab()           
+                flagQ = 0;
             }
-
-            if ((boy.position.subtract(stone.position).length()) < 5 && !flagGb) {
-                hl.addMesh(stone, BABYLON.Color3.Green());
-                if (flagQ) {
-                    Grab()
-                    flagQ = 0;
-                }
-            }
-            else {
-                hl.removeMesh(stone);
-            }
-
+        }
+        else{
+            hl.removeMesh(stone);
+        }
+        
         });
 
-        var Grab = function () {
-            boy.nextspeed.x = 0;
+        var Grab = function() {
+            boy.nextspeed.x = 0; 
             boy.nextspeed.z = 0;
             boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
             standAnimation(actualBones).play(true);
             grabAnimation(actualBones).play(true);
-            setTimeout(function () {
+            setTimeout(function(){
                 standAnimation(actualBones).play(true);
                 flagGb = 1;
                 hl.removeMesh(stone);
@@ -297,23 +296,23 @@ var createScene = function () {
         }
 
         actualBones = {
-            "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
-            "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
-            "leftUpperArm": skeletons[0].bones.filter((val) => { return val.id == 'upperArm.L' })[0],
-            "leftLowerArm": skeletons[0].bones.filter((val) => { return val.id == 'lowerArm.L' })[0],
-            "leftHand": skeletons[0].bones.filter((val) => { return val.id == 'hand.L' })[0],
-            "rightUpperArm": skeletons[0].bones.filter((val) => { return val.id == 'upperArm.R' })[0],
-            "rightLowerArm": skeletons[0].bones.filter((val) => { return val.id == 'lowerArm.R' })[0],
-            "rightHand": skeletons[0].bones.filter((val) => { return val.id == 'hand.R' })[0],
-            "leftUpperLeg": skeletons[0].bones.filter((val) => { return val.id == 'upperLeg.L' })[0],
-            "leftLowerLeg": skeletons[0].bones.filter((val) => { return val.id == 'lowerLeg.L' })[0],
-            "leftUpperFoot": skeletons[0].bones.filter((val) => { return val.id == 'upperFoot.L' })[0],
-            "leftLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.L' })[0],
-            "rightUpperLeg": skeletons[0].bones.filter((val) => { return val.id == 'upperLeg.R' })[0],
-            "rightLowerLeg": skeletons[0].bones.filter((val) => { return val.id == 'lowerLeg.R' })[0],
-            "rightUpperFoot": skeletons[0].bones.filter((val) => { return val.id == 'upperFoot.R' })[0],
-            "rightLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.R' })[0],
-            "head": skeletons[0].bones.filter((val) => { return val.id == 'head' })[0],
+            "root": skeletons[0].bones[0],
+            "trunk": skeletons[0].bones[1],
+            "leftUpperArm": skeletons[0].bones[2],
+            "leftLowerArm": skeletons[0].bones[3],
+            "leftHand": skeletons[0].bones[4],
+            "rightUpperArm": skeletons[0].bones[5],
+            "rightLowerArm": skeletons[0].bones[6],
+            "rightHand": skeletons[0].bones[7],
+            "leftUpperLeg": skeletons[0].bones[8],
+            "leftLowerLeg": skeletons[0].bones[9],
+            "leftUpperFoot": skeletons[0].bones[10],
+            "leftLowerFoot": skeletons[0].bones[11],
+            "rightUpperLeg": skeletons[0].bones[12],
+            "rightLowerLeg": skeletons[0].bones[13],
+            "rightUpperFoot": skeletons[0].bones[14],
+            "rightLowerFoot": skeletons[0].bones[15],
+            "head": skeletons[0].bones[16],
         }
         bonesOffset = {};
         for (var key in actualBones) {
@@ -335,13 +334,13 @@ var createScene = function () {
         skeletons[0].animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
         skeletons[0].animationPropertiesOverride.enableBlending = true;
         skeletons[0].animationPropertiesOverride.blendingSpeed = 0.05;
-        skeletons[0].animationPropertiesOverride.loopMode = 1;
+        skeletons[0].animationPropertiesOverride.loopMode = 1;  
 
     });
     return scene;
 };
 var scene = createScene();
-engine.runRenderLoop(function () {
+engine.runRenderLoop(function() {
     scene.render();
 });
 
