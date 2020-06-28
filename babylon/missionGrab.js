@@ -81,6 +81,7 @@ var createScene = function () {
     camera.attachControl(canvas, true);
     var ground;
     var boy;
+    var stone_pos_init = new BABYLON.Vector3(5, 1, 10);
     var light = new BABYLON.HemisphericLight("Hemi", new BABYLON.Vector3(0, 1, 0), scene);
 
     //var shadowGenerator = new BABYLON.ShadowGenerator(2048, light);
@@ -136,9 +137,9 @@ var createScene = function () {
     });
 
 
-    BABYLON.SceneLoader.ImportMesh("Z2", "../models/", "boy.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+    BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
-        boy = scene.getMeshByName("Z2");
+        boy = scene.getMeshByName("Boy");
         //boy.position = new BABYLON.Vector3(-20, 3, 10);
         boy.scaling = new BABYLON.Vector3(3, 3, 3);
         boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD); //so that object launches aligned with conventional world axis
@@ -170,7 +171,7 @@ var createScene = function () {
         
         //Stone 
         var stone = BABYLON.MeshBuilder.CreateSphere("Stone", {diameter: 1.5, diameterY: 2.5}, scene);
-        stone.position = new BABYLON.Vector3(5, 1, 10);
+        stone.position = stone_pos_init;
         var stoneMat = new BABYLON.StandardMaterial("stoneMat", scene);
         stoneMat.diffuseTexture = new BABYLON.Texture("../images/stone1.jpeg", scene);
         stone.material = stoneMat;
@@ -178,8 +179,8 @@ var createScene = function () {
         //stone.checkCollisions = true;
         //console.log("Dist", boy.position.subtract(stone.position).length());
 
-        var hl = new BABYLON.HighlightLayer("hl1", scene);
-        var h2 = new BABYLON.HighlightLayer("hl2", scene)
+        var hl1 = new BABYLON.HighlightLayer("hl1", scene);
+        var hl2 = new BABYLON.HighlightLayer("hl2", scene)
 
         var turnboi = toRad(15);
         var flagImp = 0;
@@ -245,11 +246,11 @@ var createScene = function () {
                         break
 
                         //Drop
-/*                        case "e":
+                        case "e":
                         case "E":                        
-                            //flagQ = 1;
+                            flagGb = 0;
                             console.log("Key E|e pressed.....Drop!");
-                        break*/
+                        break
                     }
                 break;
             }          
@@ -263,21 +264,24 @@ var createScene = function () {
 
         if (flagGb) {
             
-            h2.addMesh(stone, BABYLON.Color3.Red());
+            hl2.addMesh(stone, BABYLON.Color3.Red());
             stone.position.x = boy.position.x + impulseDirection.x;
             stone.position.y = boy.position.y + 3;
             stone.position.z = boy.position.z + impulseDirection.z;
         }
 
         if ( (boy.position.subtract(stone.position).length()) <5 && !flagGb) {
-            hl.addMesh(stone, BABYLON.Color3.Green());
+            hl1.addMesh(stone, BABYLON.Color3.Green());
+            hl2.removeMesh(stone); //For !flagGb
+            stone.position.y = 1; //For !flagGb
             if(flagQ) {
                 Grab()           
                 flagQ = 0;
             }
         }
         else{
-            hl.removeMesh(stone);
+            flagQ = 0; //to keep q|Q deactivated untill stone glows
+            hl1.removeMesh(stone);
         }
         
         });
@@ -291,28 +295,28 @@ var createScene = function () {
             setTimeout(function(){
                 standAnimation(actualBones).play(true);
                 flagGb = 1;
-                hl.removeMesh(stone);
+                hl1.removeMesh(stone);
             }, 1000);
         }
 
         actualBones = {
-            "root": skeletons[0].bones[0],
-            "trunk": skeletons[0].bones[1],
-            "leftUpperArm": skeletons[0].bones[2],
-            "leftLowerArm": skeletons[0].bones[3],
-            "leftHand": skeletons[0].bones[4],
-            "rightUpperArm": skeletons[0].bones[5],
-            "rightLowerArm": skeletons[0].bones[6],
-            "rightHand": skeletons[0].bones[7],
-            "leftUpperLeg": skeletons[0].bones[8],
-            "leftLowerLeg": skeletons[0].bones[9],
-            "leftUpperFoot": skeletons[0].bones[10],
-            "leftLowerFoot": skeletons[0].bones[11],
-            "rightUpperLeg": skeletons[0].bones[12],
-            "rightLowerLeg": skeletons[0].bones[13],
-            "rightUpperFoot": skeletons[0].bones[14],
-            "rightLowerFoot": skeletons[0].bones[15],
-            "head": skeletons[0].bones[16],
+            "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
+            "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
+            "leftUpperArm": skeletons[0].bones.filter((val) => { return val.id == 'upperArm.L' })[0],
+            "leftLowerArm": skeletons[0].bones.filter((val) => { return val.id == 'lowerArm.L' })[0],
+            "leftHand": skeletons[0].bones.filter((val) => { return val.id == 'hand.L' })[0],
+            "rightUpperArm": skeletons[0].bones.filter((val) => { return val.id == 'upperArm.R' })[0],
+            "rightLowerArm": skeletons[0].bones.filter((val) => { return val.id == 'lowerArm.R' })[0],
+            "rightHand": skeletons[0].bones.filter((val) => { return val.id == 'hand.R' })[0],
+            "leftUpperLeg": skeletons[0].bones.filter((val) => { return val.id == 'upperLeg.L' })[0],
+            "leftLowerLeg": skeletons[0].bones.filter((val) => { return val.id == 'lowerLeg.L' })[0],
+            "leftUpperFoot": skeletons[0].bones.filter((val) => { return val.id == 'upperFoot.L' })[0],
+            "leftLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.L' })[0],
+            "rightUpperLeg": skeletons[0].bones.filter((val) => { return val.id == 'upperLeg.R' })[0],
+            "rightLowerLeg": skeletons[0].bones.filter((val) => { return val.id == 'lowerLeg.R' })[0],
+            "rightUpperFoot": skeletons[0].bones.filter((val) => { return val.id == 'upperFoot.R' })[0],
+            "rightLowerFoot": skeletons[0].bones.filter((val) => { return val.id == 'lowerFoot.R' })[0],
+            "head": skeletons[0].bones.filter((val) => { return val.id == 'head' })[0],
         }
         bonesOffset = {};
         for (var key in actualBones) {
