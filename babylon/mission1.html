@@ -11,7 +11,17 @@
 <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
 <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
 
-<script type="module" src="mission1.js"></script>
+<script type="text/javascript">
+    function callAll(jsfiles) {
+        var src = document.createElement("script");
+        src.setAttribute("type", "text/javascript");
+        src.setAttribute("src", jsfiles);
+        document.getElementsByTagName("head")[0].appendChild(src);
+    }
+    callAll("mission1.js");
+    callAll("game.js");
+</script>
+
 <link rel="stylesheet" type="text/css" href="main.css">
 
 <body>

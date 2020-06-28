@@ -4,14 +4,38 @@ var camera;
 var advancedTexture;
 var text2;
 var text3;
-function radians(deg) { return deg * Math.PI / 180; }
+var optimizer;
 
 let createScene = function () {
+    engine.setHardwareScalingLevel(1);
+    let scene = new BABYLON.Scene(engine);
+
+    var result = new BABYLON.SceneOptimizerOptions(60, 2000);
+    result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    var priority = 0;
+    result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
+    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
+    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
+    // Next priority
+    priority++;
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
+    //result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    optimizer = new BABYLON.SceneOptimizer(scene, result);
+
+
     var play = 1;
     // Init engine
 
     // Init scene
-    var scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color3(0, 0, 0);
 
     // Camera
@@ -238,10 +262,10 @@ let createScene = function () {
     buttonC.fontSize = 32;
     //buttonC.background = "green";
     buttonC.cornerRadius = 20;
-    buttonC.onPointerUpObservable.add(function(){
+    buttonC.onPointerUpObservable.add(function () {
         window.location.href = "command.html";
-    }); 
-    advancedTexture.addControl(buttonC); 
+    });
+    advancedTexture.addControl(buttonC);
 
     var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "Story");
     buttonS.left = '40%';
@@ -251,19 +275,19 @@ let createScene = function () {
     buttonS.color = "orange";
     buttonS.fontSize = 32;
     buttonS.cornerRadius = 20;
-    buttonS.onPointerUpObservable.add(function(){
+    buttonS.onPointerUpObservable.add(function () {
         window.location.href = "story.html";
-    }); 
-    advancedTexture.addControl(buttonS); 
+    });
+    advancedTexture.addControl(buttonS);
 
     scene.shadowsEnabled = true;
 
-    camera = new BABYLON.ArcRotateCamera("Camera", radians(300),
-        radians(80), 60, planetEarth.position, scene);
+    camera = new BABYLON.ArcRotateCamera("Camera", BABYLON.Tools.ToRadians(300),
+        BABYLON.Tools.ToRadians(80), 60, planetEarth.position, scene);
     //camera.attachControl(canvas, true);
 
-    BABYLON.SceneLoader.ImportMesh("ACES", "../models/", "ACES2.babylon", scene, function (newMeshes, particleSystems, skeletons) {
-        let boy = scene.getMeshByName("ACES");
+    BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "ACES2.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+        let boy = scene.getMeshByName("Boy");
         boy.position = camera.position.clone().add(new BABYLON.Vector3(-1.3, -2.2, 1));
         boy.rotation.y = Math.PI
         boy.scaling = new BABYLON.Vector3(1.3, 1.2, 1.2)
@@ -355,6 +379,7 @@ engine.runRenderLoop(function () {
 
 scene.executeWhenReady(function () {
     fading(text2, 30, 1, 0);
+    optimizer.start();
     typeWriter()
 })
 
