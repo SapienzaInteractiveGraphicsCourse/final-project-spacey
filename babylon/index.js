@@ -11,24 +11,18 @@ let createScene = function () {
     let scene = new BABYLON.Scene(engine);
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
-    result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
     var priority = 0;
     result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
     result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
-    // Next priority
     priority++;
     result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
     result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
-    // Next priority
     priority++;
     result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
-    // Next priority
     priority++;
     result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
-    // Next priority
     priority++;
-    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
-    //result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1));
     optimizer = new BABYLON.SceneOptimizer(scene, result);
 
 

@@ -26,7 +26,6 @@ let createScene = function () {
     let scene = new BABYLON.Scene(engine);
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
-    result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
     var priority = 0;
     result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
     result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
@@ -42,8 +41,7 @@ let createScene = function () {
     result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
     // Next priority
     priority++;
-    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 4));
-    //result.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1));
     optimizer = new BABYLON.SceneOptimizer(scene, result);
 
     scene.shadowsEnabled = true;
@@ -52,7 +50,7 @@ let createScene = function () {
     scene.autoClear = false; // Color buffer
     scene.autoClearDepthAndStencil = false; // Depth and stencil, obviously
 
-    CoT = new BABYLON.TransformNode("root");
+    CoT = new BABYLON.TransformNode("CoTCamera");
 
     farCamera = new BABYLON.FreeCamera("farCamera", new BABYLON.Vector3.Zero(), scene);
     farCamera.rotation.x = farCamera.rotation.x - Math.PI
@@ -124,9 +122,12 @@ let createScene = function () {
         earth.position = new BABYLON.Vector3(200, 100, -100);
         earth.rotation = new BABYLON.Vector3(0, 0, 23.5);
         let earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
-        earthMaterial.reflectionTexture = new BABYLON.Texture("../images/earth.jpg", scene, true);
-        earthMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
+        earthMaterial.diffuseTexture = new BABYLON.Texture("../images/earth.jpg", scene, true);
+        earthMaterial.diffuseTexture.coordinatesMode = BABYLON.Texture.SPHERICAL_MODE;
         earth.material = earthMaterial;
+        shadowGenerator.addShadowCaster(earth);
+        shadowGenerator.getShadowMap().renderList.push(earth);
+        earth.receiveShadows = true;
         earth.material.freeze();
         earth.freezeWorldMatrix();
         earth.doNotSyncBoundingInfo = true;
@@ -167,8 +168,6 @@ let createScene = function () {
         shadowGenerator.getShadowMap().renderList.push(boy);
         boy.checkCollisions = true;
         boy.applyGravity = true;
-        boy.ellipsoid = new BABYLON.Vector3(.6, 1.14, .6);
-        boy.ellipsoidOffset = new BABYLON.Vector3(0, 0, 0);
         boy.material.freeze();
         boy.alwaysSelectAsActiveMesh = true
         //boy.doNotSyncBoundingInfo = true; //uncomment only if not use physics
@@ -215,24 +214,35 @@ let createScene = function () {
         skeletons[0].animationPropertiesOverride.blendingSpeed = 0.05;
         skeletons[0].animationPropertiesOverride.loopMode = 1;
 
+        let walking = walkAnimation(actualBones)
+        let jumping = jumpAnimation(actualBones)
+        let standing = standAnimation(actualBones)
+        let frame = 0;
         document.addEventListener('keydown', function (event) {
+
+
             if (event.keyCode == 49) { //1 key
-                jumpAnimation(actualBones).stop();
-                standAnimation(actualBones).stop();
-                walkAnimation(actualBones).play(true); //loop
+                jumping.stop();
+                standing.stop();
+                walking.play(true); //loop
             }
             else if (event.keyCode == 50) { //2 key
-                standAnimation(actualBones).stop();
-                walkAnimation(actualBones).stop();
-                let jump = jumpAnimation(actualBones)
-                jump.speedRatio = 0.5; // we can set velocity according to time of flight
-                jump.play();
+                standing.stop();
+                walking.stop();
+                jumping.speedRatio = 0.5; // we can set velocity according to time of flight
+                jumping.play();
 
             }
             else if (event.keyCode == 51) { //3 key
-                walkAnimation(actualBones).stop();
-                jumpAnimation(actualBones).stop();
-                standAnimation(actualBones).play();
+                walking.stop();
+                jumping.stop();
+                standing.play();
+
+            }
+            else if (event.keyCode == 52) { //4 key
+                walking.pause();
+                jumping.pause();
+                standing.pause();
 
             }
         });
@@ -264,7 +274,7 @@ window.addEventListener('resize', function () {
 
 function walkAnimation(parts) {
     let walkGroup = new BABYLON.AnimationGroup("Walk");
-    let root = new BABYLON.Animation("root", "position.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let root = new BABYLON.Animation("root", "position", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     let trunk = new BABYLON.Animation("trunk", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     let leftUpperArm = new BABYLON.Animation("upperArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     let leftLowerArm = new BABYLON.Animation("lowerArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
@@ -302,16 +312,18 @@ function walkAnimation(parts) {
 
     // root keys
     {
+        let x = bonesOffset["root"].position.x;
         let y = bonesOffset["root"].position.y;
-        rootKeys.push({ frame: 0, value: y });
-        rootKeys.push({ frame: 10, value: y });
-        rootKeys.push({ frame: 20, value: y - 0.04 });
-        rootKeys.push({ frame: 30, value: y - 0.04 });
-        rootKeys.push({ frame: 40, value: y });
-        rootKeys.push({ frame: 50, value: y });
-        rootKeys.push({ frame: 60, value: y - 0.04 });
-        rootKeys.push({ frame: 70, value: y - 0.04 });
-        rootKeys.push({ frame: 80, value: y });
+        let z = bonesOffset["root"].position.z;
+        rootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rootKeys.push({ frame: 10, value: new BABYLON.Vector3(x, y, z) });
+        rootKeys.push({ frame: 20, value: new BABYLON.Vector3(x, y - 0.04, z) });
+        rootKeys.push({ frame: 30, value: new BABYLON.Vector3(x, y - 0.04, z) });
+        rootKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
+        rootKeys.push({ frame: 50, value: new BABYLON.Vector3(x, y, z) });
+        rootKeys.push({ frame: 60, value: new BABYLON.Vector3(x, y - 0.04, z) });
+        rootKeys.push({ frame: 70, value: new BABYLON.Vector3(x, y - 0.04, z) });
+        rootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         root.setKeys(rootKeys);
     }
     // trunk keys
@@ -392,13 +404,13 @@ function walkAnimation(parts) {
         let y = bonesOffset["leftUpperLeg"].rotation.y;
         let z = bonesOffset["leftUpperLeg"].rotation.z;
         leftUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        leftUpperLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-7), y, z) });
-        leftUpperLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-12), y, z) });
-        leftUpperLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-8), y, z) });
-        leftUpperLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(11), y, z) });
-        leftUpperLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(23), y, z) });
-        leftUpperLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
-        leftUpperLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(13), y, z) });
+        leftUpperLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-7 - 5), y, z) });
+        leftUpperLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-12 - 5), y, z) });
+        leftUpperLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-8 - 5), y, z) });
+        leftUpperLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(11 + 5), y, z) });
+        leftUpperLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(23 + 5), y, z) });
+        leftUpperLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10 + 5), y, z) });
+        leftUpperLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(14 + 5), y, z) });
         leftUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         leftUpperLeg.setKeys(leftUpperLegKeys);
     }
@@ -409,12 +421,12 @@ function walkAnimation(parts) {
         let z = bonesOffset["leftLowerLeg"].rotation.z;
         leftLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
         leftLowerLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x, y, z) });
-        leftLowerLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(3), y, z) });
-        leftLowerLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(19), y, z) });
-        leftLowerLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(35), y, z) });
-        leftLowerLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(27), y, z) });
-        leftLowerLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-1), y, z) });
-        leftLowerLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(13), y, z) });
+        leftLowerLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(3 + 20), y, z) });
+        leftLowerLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(19 + 20), y, z) });
+        leftLowerLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(35 + 20), y, z) });
+        leftLowerLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(27 + 20), y, z) });
+        leftLowerLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(0), y, z) });
+        leftLowerLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(13 + 20), y, z) });
         leftLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         leftLowerLeg.setKeys(leftLowerLegKeys);
     }
@@ -451,15 +463,15 @@ function walkAnimation(parts) {
         let x = bonesOffset["rightUpperLeg"].rotation.x;
         let y = bonesOffset["rightUpperLeg"].rotation.y;
         let z = bonesOffset["rightUpperLeg"].rotation.z;
-        rightUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(11), y, z) });
-        rightUpperLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(23), y, z) });
-        rightUpperLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
-        rightUpperLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(13), y, z) });
-        rightUpperLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-1), y, z) });
-        rightUpperLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-7), y, z) });
-        rightUpperLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-12), y, z) });
-        rightUpperLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-8), y, z) });
-        rightUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(11), y, z) });
+        rightUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(11 + 5), y, z) });
+        rightUpperLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(23 + 5), y, z) });
+        rightUpperLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10 + 5), y, z) });
+        rightUpperLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(14 + 5), y, z) });
+        rightUpperLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-7 - 5), y, z) });
+        rightUpperLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-12 - 5), y, z) });
+        rightUpperLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-8 - 5), y, z) });
+        rightUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(11 + 5), y, z) });
         rightUpperLeg.setKeys(rightUpperLegKeys);
     }
     // rightLowerLeg keys
@@ -467,15 +479,15 @@ function walkAnimation(parts) {
         let x = bonesOffset["rightLowerLeg"].rotation.x;
         let y = bonesOffset["rightLowerLeg"].rotation.y;
         let z = bonesOffset["rightLowerLeg"].rotation.z;
-        rightLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(35), y, z) });
-        rightLowerLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(27), y, z) });
+        rightLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(35 + 20), y, z) });
+        rightLowerLegKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(27 + 20), y, z) });
         rightLowerLegKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(0), y, z) });
-        rightLowerLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(13), y, z) });
+        rightLowerLegKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(13 + 20), y, z) });
         rightLowerLegKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(0), y, z) });
         rightLowerLegKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(0), y, z) });
-        rightLowerLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(3), y, z) });
-        rightLowerLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(19), y, z) });
-        rightLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(35), y, z) });
+        rightLowerLegKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(3 + 20), y, z) });
+        rightLowerLegKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(19 + 20), y, z) });
+        rightLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(35 + 20), y, z) });
         rightLowerLeg.setKeys(rightLowerLegKeys);
     }
     // rightUpperFoot keys
@@ -540,7 +552,7 @@ function walkAnimation(parts) {
 
 function jumpAnimation(parts) {
     let jumpGroup = new BABYLON.AnimationGroup("Jump");
-    let root = new BABYLON.Animation("root", "position.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let root = new BABYLON.Animation("root", "position", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     let trunk = new BABYLON.Animation("trunk", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     let leftUpperArm = new BABYLON.Animation("upperArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
     let leftLowerArm = new BABYLON.Animation("lowerArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
@@ -579,10 +591,12 @@ function jumpAnimation(parts) {
     // root startingPosition
     // root keys
     {
+        let x = bonesOffset["root"].position.x;
         let y = bonesOffset["root"].position.y;
-        rootKeys.push({ frame: 0, value: y - 0.08 });
-        rootKeys.push({ frame: 40, value: y });
-        rootKeys.push({ frame: 80, value: y - 0.08 });
+        let z = bonesOffset["root"].position.z;
+        rootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y - 0.08, z) });
+        rootKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
+        rootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y - 0.08, z) });
         root.setKeys(rootKeys);
     }
     // trunk keys
