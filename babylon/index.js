@@ -5,12 +5,17 @@ var advancedTexture;
 var text2;
 var text3;
 var optimizer;
+let boy;
+
 
 let createScene = function () {
-    engine.displayLoadingUI();
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
-    //	engine.loadingUIText = "START...";
+    //engine.loadingUIText = "START...";
+
+    camera = new BABYLON.ArcRotateCamera("Camera", BABYLON.Tools.ToRadians(300),
+        BABYLON.Tools.ToRadians(80), 60, new BABYLON.Vector3(2, 0, 85), scene);
+    //camera.attachControl(canvas, true);
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
     var priority = 0;
@@ -24,7 +29,7 @@ let createScene = function () {
     priority++;
     result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
     priority++;
-    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1));
+    //result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1));
     optimizer = new BABYLON.SceneOptimizer(scene, result);
 
 
@@ -201,28 +206,38 @@ let createScene = function () {
 
     advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
+    createPlanet(mercury);
+    createPlanet(venus);
+    createPlanet(earth);
+    createPlanet(mars);
+    createPlanet(jupiter);
+    createPlanet(saturn);
+    createPlanet(uranus);
+    createPlanet(neptune);
+
     var messageContainer = new BABYLON.GUI.Rectangle();
     messageContainer.left = '30%';
     messageContainer.top = '25%';
-    messageContainer.height = 0.2;
+    messageContainer.height = 0.3;
     messageContainer.width = 0.3;
     messageContainer.cornerRadius = 20;
     messageContainer.color = "Orange";
+    messageContainer.thickness = 0;
     advancedTexture.addControl(messageContainer);
 
     var panel = new BABYLON.GUI.StackPanel();
     messageContainer.addControl(panel);
 
     var text1 = new BABYLON.GUI.TextBlock();
-    text1.text = 'Space Y'
-    text1.height = "40px";
+    text1.text = 'SPACE Y'
+    text1.height = "60px";
     text1.width = 1;
     text1.color = "Orange";
-    text1.fontSize = 30;
+    text1.fontSize = 60;
     panel.addControl(text1);
 
     text2 = new BABYLON.GUI.TextBlock();
-    text2.text = 'select the mission'
+    text2.text = '__________________'
     text2.height = "40px";
     text2.width = 1;
     text2.color = "Orange";
@@ -230,72 +245,55 @@ let createScene = function () {
     panel.addControl(text2);
 
     var panel2 = new BABYLON.GUI.StackPanel();
-    panel2.top = '-40%';
+    panel2.top = '-35%';
     advancedTexture.addControl(panel2);
 
     text3 = new BABYLON.GUI.TextBlock();
+    text3.text = 'select\nthe mission'
     text3.height = "80px";
     text3.width = 1;
     text3.color = "Orange";
     text3.fontSize = 24;
     panel2.addControl(text3);
 
-    var planetMercury = createPlanet(mercury);
-    var planetVenus = createPlanet(venus);
-    var planetEarth = createPlanet(earth);
-    var planetMars = createPlanet(mars);
-    var planetJupiter = createPlanet(jupiter);
-    var planetSaturn = createPlanet(saturn);
-    var planetUranus = createPlanet(uranus);
-    var planetNeptune = createPlanet(neptune);
-
-    var buttonContainer = new BABYLON.GUI.Rectangle();
-    buttonContainer.left = '30%';
-    buttonContainer.top = '40%';
-    buttonContainer.height = 0.1;
-    buttonContainer.width = 0.3;
-    buttonContainer.thickness = 0;
-    advancedTexture.addControl(buttonContainer);
-
-    var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "Commands");
-    buttonC.left = '-25%';
+    var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "commands");
     buttonC.width = 0.40;
     buttonC.height = "40px";
     buttonC.color = "orange";
-    buttonC.fontSize = 24;
-    //buttonC.background = "green";
+    buttonC.fontSize = 20;
     buttonC.cornerRadius = 20;
+    buttonC.thickness = 0;
     buttonC.onPointerUpObservable.add(function () {
         window.location.href = "command.html";
     });
-    buttonContainer.addControl(buttonC);
+    panel.addControl(buttonC);
 
-    var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "Story");
-    buttonS.left = '25%';
+    var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "story");
     buttonS.width = 0.40;
-    buttonS.height = "40px";
+    buttonS.height = "20px";
     buttonS.color = "orange";
-    buttonS.fontSize = 24;
+    buttonS.fontSize = 20;
     buttonS.cornerRadius = 20;
+    buttonS.thickness = 0;
     buttonS.onPointerUpObservable.add(function () {
         window.location.href = "story.html";
     });
-    buttonContainer.addControl(buttonS);
+    panel.addControl(buttonS);
 
     scene.shadowsEnabled = true;
 
-    camera = new BABYLON.ArcRotateCamera("Camera", BABYLON.Tools.ToRadians(300),
-        BABYLON.Tools.ToRadians(80), 60, planetEarth.position, scene);
-    //camera.attachControl(canvas, true);
-
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "ACES2.babylon", scene, function (newMeshes, particleSystems, skeletons) {
-        let boy = scene.getMeshByName("Boy");
+        boy = scene.getMeshByName(newMeshes[0].name);
         boy.position = camera.position.clone().add(new BABYLON.Vector3(-1.3, -2.2, 1));
         boy.rotation.y = Math.PI
         boy.scaling = new BABYLON.Vector3(1.3, 1.2, 1.2)
-
-
+        boy.material.freeze();
+        boy.alwaysSelectAsActiveMesh = true
+    }, function (loading) {
+        var ld = Math.floor(loading.loaded / loading.total * 100.0)
+        LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
     });
+
     // Planet Creation
     function createPlanet(planet) {
         var internalPlanet = new BABYLON.Mesh.CreateSphere(planet.name, planet.resolution, planet.size, scene);
@@ -367,24 +365,31 @@ let createScene = function () {
             }
         }
     };
+    optimizer.start();
 
     return scene;
 
 }
+const LOADING = createLoading();
 
-let scene = createScene();
+var scene = createScene();
+
 // Render Scene
 engine.runRenderLoop(function () {
-    scene.render();
+    if (scene.isReady() && LOADING.timeout) {
+        if (LOADING.scene.isReady()) {
+            LOADING.scene.dispose();
+            fading(text3, 30, 1, 0);
+        }
+        scene.render();
+    } else if (LOADING.scene.isReady()) {
+        LOADING.scene.render();
+    }
 
 });
 
-scene.executeWhenReady(function () {
-    engine.hideLoadingUI();
-    fading(text2, 30, 1, 0);
-    optimizer.start();
-    typeWriter()
-})
+// scene.executeWhenReady(function () {
+// })
 
 window.addEventListener('resize', function () {
     engine.resize();
@@ -393,10 +398,12 @@ window.addEventListener('resize', function () {
 function addLabel(mesh) {
 
     var color = 'Gray'
+    var up_down = 1
+
     if (mesh.name == 'moon' || mesh.name == 'mars') {
         color = 'Orange'
+        up_down = -1
     }
-    var up_down = Math.sign(Math.random() - 0.5)
 
     var rect1 = new BABYLON.GUI.Button.CreateImageWithCenterTextButton(mesh.name, mesh.name);
     rect1.width = 0.1;

@@ -17,12 +17,12 @@ let startButton;
 let pos1;
 let pos2;
 let godrays;
+let godrays2;
 let dirLight;
 let widthGround;
 let heightGround;
 var optimizer;
 let createScene = function () {
-    engine.displayLoadingUI();
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
 
@@ -94,7 +94,6 @@ let createScene = function () {
     godrays.mesh.freezeWorldMatrix();
     godrays.mesh.doNotSyncBoundingInfo = true;
 
-
     // Shadows
     let shadowGenerator = new BABYLON.ShadowGenerator(5000, dirLight);
     shadowGenerator.useBlurExponentialShadowMap = true;
@@ -146,21 +145,24 @@ let createScene = function () {
         ground.material.freeze();
         ground.freezeWorldMatrix();
         //ground.doNotSyncBoundingInfo = true; //uncomment only if not use physics
+    }, function (loading) {
+        var ld = Math.floor(loading.loaded / loading.total * 100.0)
+        LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
     });
 
 
-    BABYLON.SceneLoader.Append("../models/", OBJ_PATH_1, scene, function (newMeshes) {
-        let nav = scene.getMeshByName("MMSEV");
-        nav.position = OBJ_POS_1;
-        nav.scaling = new BABYLON.Vector3(2, 2, 2);
-        shadowGenerator.addShadowCaster(nav);
-        shadowGenerator.getShadowMap().renderList.push(nav);
-        nav.receiveShadows = true;
-        nav.checkCollisions = true;
-        nav.material.freeze();
-        nav.freezeWorldMatrix();
-        nav.doNotSyncBoundingInfo = true;
-    });
+    // BABYLON.SceneLoader.Append("../models/", OBJ_PATH_1, scene, function (newMeshes) {
+    //     let nav = scene.getMeshByName("MMSEV");
+    //     nav.position = OBJ_POS_1;
+    //     nav.scaling = new BABYLON.Vector3(2, 2, 2);
+    //     shadowGenerator.addShadowCaster(nav);
+    //     shadowGenerator.getShadowMap().renderList.push(nav);
+    //     nav.receiveShadows = true;
+    //     nav.checkCollisions = true;
+    //     nav.material.freeze();
+    //     nav.freezeWorldMatrix();
+    //     nav.doNotSyncBoundingInfo = true;
+    // });
 
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", BOY_PATH, scene, function (newMeshes, particleSystems, skeletons) {
         boy = scene.getMeshByName(newMeshes[0].name);
@@ -247,6 +249,9 @@ let createScene = function () {
             }
         });
 
+    }, function (loading) {
+        var ld = Math.floor(loading.loaded / loading.total * 100.0)
+        LOADING.subtitle.text = 'landing: ' + ld + '%'
     });
     scene.shadowsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -1.62, 0);
@@ -255,19 +260,31 @@ let createScene = function () {
     farCamera.checkCollisions = true;
     farCamera.applyGravity = true;
     farCamera.collisionRadius = new BABYLON.Vector3(2, 2, 2);
+    optimizer.start();
     return scene;
 };
-let scene = createScene();
 
-scene.executeWhenReady(function () {
-    optimizer.start();
-    engine.hideLoadingUI();
-    showGUI();
-})
+const LOADING = createLoading();
 
+var scene = createScene();
+
+// Render Scene
 engine.runRenderLoop(function () {
-    scene.render();
+    if (scene.isReady() && LOADING.timeout) {
+        if (LOADING.scene.isReady()) {
+            LOADING.scene.dispose();
+            showGUI();
+        }
+        scene.render();
+    } else if (LOADING.scene.isReady()) {
+        LOADING.scene.render();
+    }
+
 });
+
+// scene.executeWhenReady(function () {
+// })
+
 
 window.addEventListener('resize', function () {
     engine.resize();
@@ -1075,6 +1092,15 @@ function fastZoom() {
 
     scene.beginAnimation(CoT, 0, 200, false, 1, function () {
         fading(rect2, 30, 0, 1);
+        godrays2 = new BABYLON.VolumetricLightScatteringPostProcess('godrays2', 1.0, nearCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
+        godrays2.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
+        godrays2.mesh.material.diffuseTexture.hasAlpha = true;
+        godrays2.mesh.material.freeze();
+        godrays2.mesh.position = new BABYLON.Vector3(0, 100, -200);
+        godrays2.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
+        dirLight.position = godrays2.mesh.position;
+        godrays2.mesh.freezeWorldMatrix();
+        godrays2.mesh.doNotSyncBoundingInfo = true;
         nearCamera.position = CoT.position;
         nearCamera.target = boy.position.clone().add(new BABYLON.Vector3(0, 2, 0))
         nearCamera.attachControl(canvas, true);
