@@ -10,6 +10,7 @@ let createScene = function () {
     engine.displayLoadingUI();
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
+    //	engine.loadingUIText = "START...";
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
     var priority = 0;
