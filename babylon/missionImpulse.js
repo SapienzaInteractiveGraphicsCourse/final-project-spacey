@@ -3,7 +3,22 @@ var engine = new BABYLON.Engine(canvas, true);
 
 var bonesOffset = [];
 var actualBones = [];
+var pos;
+function getHeightAtOctreeGroundCoordinates(x, z) {
 
+    var height;
+    var origin = new BABYLON.Vector3(x, 10, z);
+    var down = new BABYLON.Vector3(x, -10, z);
+
+    var ray = new BABYLON.Ray(origin, down);
+    var hit = scene.pickWithRay(ray);
+
+    if (hit.pickedPoint) {
+        height = hit.pickedPoint.y;
+    }
+
+    return height;
+}
 function toRad(deg) { return deg * Math.PI / 180; }
 
 function rotateVector(vect, rot) {
@@ -136,8 +151,8 @@ var createScene = function () {
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
         var boy = scene.getMeshByName("Boy");
-        //boy.position = new BABYLON.Vector3(-20, 3, 10);
-        boy.scaling = new BABYLON.Vector3(3, 3, 3);
+        boy.position = new BABYLON.Vector3(9, 5, -15);
+        boy.scaling = new BABYLON.Vector3(5, 5, 5);
         boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD); //so that object launches aligned with conventional world axis
         //shadowGenerator.getShadowMap().renderList.push(boy);
         boy.applyGravity = true;
@@ -154,15 +169,13 @@ var createScene = function () {
 
         camera.lockedTarget = boy;
         // Ground (using a box not a plane)
-        var ground = BABYLON.MeshBuilder.CreateBox("Ground", { width: 200, height: 0.1, depth: 200 }, scene);
 
         var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-        groundMat.diffuseColor = new BABYLON.Color3(1, 1, 1);
-        //groundMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        //groundMat.backFaceCulling = true;
-        groundMat.diffuseTexture = new BABYLON.Texture("../images/moon1.jpg", scene);
+        groundMat.diffuseTexture = new BABYLON.Texture("../images/moon.jpg", scene);
+        var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/moonHP1.jpeg", 200, 200, 250, 0, 10, scene, false, function () {
+            ground.optimize(128);
+        });
         ground.material = groundMat;
-        ground.receiveShadows = true;
         ground.checkCollisions = true;
 
         var turnboi = toRad(15);
@@ -219,12 +232,47 @@ var createScene = function () {
                     break;
             }
         });
+        console.log("BH", boy.position);
+
+
+
 
         scene.registerBeforeRender(function () {
+            boy.isPickable = false;
+            function vecToLocal(vector, mesh){
+                var m = mesh.getWorldMatrix();
+                var v = BABYLON.Vector3.TransformCoordinates(vector, m);
+                return v;        
+            }
+
+            function castRay(){       
+                var origin = boy.position;
+            
+                var forward = new BABYLON.Vector3(0,-1,0);       
+                forward = vecToLocal(forward, boy);
+            
+                var direction = forward.subtract(origin);
+                direction = BABYLON.Vector3.Normalize(direction);
+            
+                var length = 100;
+            
+                var ray = new BABYLON.Ray(origin, direction, length);
+
+                let rayHelper = new BABYLON.RayHelper(ray);     
+                rayHelper.show(scene);      
+
+                var hit = scene.pickWithRay(ray);
+
+                if (hit.pickedMesh){
+                   console.log("Hit", hit.pickedPoint);
+                }
+            }
             if (flagImp) {
                 boy.moveWithCollisions(boy.speed);
                 boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
             }
+            castRay();
+
         });
 
         actualBones = {
