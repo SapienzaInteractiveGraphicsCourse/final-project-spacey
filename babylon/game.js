@@ -69,14 +69,22 @@ let createScene = function () {
     nearCamera.applyGravity = true;
     nearCamera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
 
+    var light = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 100, -200), scene);
+    light.intensity = 0.8;
+    light.diffuse = new BABYLON.Color3(1, 1, 1);
+    light.specular = new BABYLON.Color3(1, 1, 1);
+    light.ambient = new BABYLON.Color3(1, 1, 1);
+    light.groundColor = new BABYLON.Color3(0, 0, 0);
+
     let hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 100, -200), scene);
-    hemiLight.intensity = 0.2;
+    hemiLight.intensity = 0.1;
     hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
-    hemiLight.specular = new BABYLON.Color3(0.6, 0.6, 0.5);
+    hemiLight.specular = new BABYLON.Color3(1, 1, 1);
+    hemiLight.ambient = new BABYLON.Color3(1, 1, 1);
     hemiLight.groundColor = new BABYLON.Color3(0, 0, 0);
 
     dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 2), scene);
-    dirLight.intensity = 0.8;
+    dirLight.intensity = 1;
     dirLight.diffuse = new BABYLON.Color3(1, 1, 1);
     dirLight.specular = new BABYLON.Color3(1, 1, 1);
     dirLight.ambient = new BABYLON.Color3(1, 1, 1);
@@ -115,15 +123,16 @@ let createScene = function () {
     skybox.doNotSyncBoundingInfo = true;
     skybox.convertToUnIndexedMesh();
 
-
-
     if (EARTH) {
         let earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 10 }, scene);
-        earth.position = new BABYLON.Vector3(200, 100, -100);
+        earth.position = new BABYLON.Vector3(50, 100, 200);
         earth.rotation = new BABYLON.Vector3(0, 0, 23.5);
         let earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
         earthMaterial.diffuseTexture = new BABYLON.Texture("../images/earth.jpg", scene, true);
         earthMaterial.diffuseTexture.coordinatesMode = BABYLON.Texture.SPHERICAL_MODE;
+        earthMaterial.specularColor = new BABYLON.Color3(0, 0, 0)
+        earthMaterial.ambientColor = new BABYLON.Color3(1, 1, 1)
+
         earth.material = earthMaterial;
         shadowGenerator.addShadowCaster(earth);
         shadowGenerator.getShadowMap().renderList.push(earth);
@@ -144,6 +153,41 @@ let createScene = function () {
         ground.checkCollisions = true;
         ground.material.freeze();
         ground.freezeWorldMatrix();
+        ground.specularColor = new BABYLON.Color3(0, 0, 0);
+
+        // customMesh = BABYLON.Mesh.CreateGround("ground1", 100, 100, 1000, scene, true);
+        // customMesh.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind, true);
+        // customMesh.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind, true);
+        // customMesh.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.UVKind, true);
+
+        // var pdata = ground.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+        // var ndata = ground.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+        // var udata = ground.getVerticesData(BABYLON.VertexBuffer.UVKind);
+        // var idata = ground.getIndices();
+        //var row = Math.round(Math.sqrt(pdata.length) / 3)
+
+        // var terrainSub = 0;               // 100 terrain subdivisions
+        // var params = {
+        //     mapData: pdata,               // data map declaration : what data to use ?
+        //     mapSubX: row,               // how are these data stored by rows and columns
+        //     mapSubZ: row,
+        //     terrainSub: terrainSub          // how many terrain subdivisions wanted
+        // }
+        // var terrain = new BABYLON.DynamicTerrain("t", params, scene);
+
+        // terrain.wireframe = true;
+        // console.log('ok')
+        // ground.dispose()
+
+        // customMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, pdata);
+        // customMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, ndata);
+        // customMesh.setVerticesData(BABYLON.VertexBuffer.UVKind, udata);
+        // customMesh.setIndices(idata);
+        // customMesh.optimize(512);
+        // customMesh = customMesh.updateCoordinateHeights()
+        // var mat = new BABYLON.StandardMaterial("mat", scene);
+        // customMesh.material = mat;
+        // customMesh.position = new BABYLON.Vector3.Zero()
         //ground.doNotSyncBoundingInfo = true; //uncomment only if not use physics
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
@@ -281,10 +325,6 @@ engine.runRenderLoop(function () {
     }
 
 });
-
-// scene.executeWhenReady(function () {
-// })
-
 
 window.addEventListener('resize', function () {
     engine.resize();
