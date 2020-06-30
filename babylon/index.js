@@ -215,6 +215,18 @@ let createScene = function () {
     createPlanet(uranus);
     createPlanet(neptune);
 
+    var panel2 = new BABYLON.GUI.StackPanel();
+    panel2.top = '-35%';
+    advancedTexture.addControl(panel2);
+
+    text3 = new BABYLON.GUI.TextBlock();
+    text3.text = 'select the mission'
+    text3.height = "80px";
+    text3.width = 1;
+    text3.color = "Orange";
+    text3.fontSize = 24;
+    panel2.addControl(text3);
+
     var messageContainer = new BABYLON.GUI.Rectangle();
     messageContainer.left = '30%';
     messageContainer.top = '25%';
@@ -244,18 +256,6 @@ let createScene = function () {
     text2.fontSize = 24;
     panel.addControl(text2);
 
-    var panel2 = new BABYLON.GUI.StackPanel();
-    panel2.top = '-35%';
-    advancedTexture.addControl(panel2);
-
-    text3 = new BABYLON.GUI.TextBlock();
-    text3.text = 'select\nthe mission'
-    text3.height = "80px";
-    text3.width = 1;
-    text3.color = "Orange";
-    text3.fontSize = 24;
-    panel2.addControl(text3);
-
     var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "commands");
     buttonC.width = 0.40;
     buttonC.height = "40px";
@@ -264,7 +264,7 @@ let createScene = function () {
     buttonC.cornerRadius = 20;
     buttonC.thickness = 0;
     buttonC.onPointerUpObservable.add(function () {
-        window.location.href = "command.html";
+        openCommandDialog();
     });
     panel.addControl(buttonC);
 
@@ -276,9 +276,43 @@ let createScene = function () {
     buttonS.cornerRadius = 20;
     buttonS.thickness = 0;
     buttonS.onPointerUpObservable.add(function () {
-        window.location.href = "story.html";
+        window.location.href = "mission1.html";
     });
     panel.addControl(buttonS);
+
+    var soundContainer = new BABYLON.GUI.Rectangle();
+    soundContainer.width = 0.40;
+    soundContainer.height = "40px";
+    soundContainer.cornerRadius = 20;
+    soundContainer.color = "Orange";
+    soundContainer.thickness = 0;
+    panel.addControl(soundContainer);
+
+    var panel3 = new BABYLON.GUI.StackPanel();
+    panel3.width = 0.5;
+    panel3.height = 1;
+    panel3.isVertical = false;
+    panel3.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    panel3.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    soundContainer.addControl(panel3);
+
+    var checkbox = new BABYLON.GUI.Checkbox();
+    checkbox.width = "20px";
+    checkbox.height = "20px";
+    checkbox.isChecked = true;
+    checkbox.color = "orange";
+    checkbox.onIsCheckedChangedObservable.add(function (value) {
+        BABYLON.Engine.audioEngine.setGlobalVolume(+value);
+    });
+    panel3.addControl(checkbox);
+
+    var header = new BABYLON.GUI.TextBlock();
+    header.text = "sound";
+    header.width = "70px";
+    header.paddingLeft = "10px";
+    header.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    header.color = "orange";
+    panel3.addControl(header);
 
     scene.shadowsEnabled = true;
 
@@ -492,4 +526,48 @@ function typeWriter() {
         i++;
         setTimeout(typeWriter, 50);
     }
+}
+
+function openCommandDialog() {
+    var messageContainer = new BABYLON.GUI.Rectangle();
+    messageContainer.height = 0.5;
+    messageContainer.width = 0.5;
+    messageContainer.cornerRadius = 20;
+    messageContainer.color = "Orange";
+    messageContainer.background = "black"
+    //    messageContainer.thickness = 0;
+    advancedTexture.addControl(messageContainer);
+
+    var panel = new BABYLON.GUI.StackPanel();
+    messageContainer.addControl(panel);
+
+    var text = new BABYLON.GUI.TextBlock();
+    text.text = 'commands'
+    text.height = "40px";
+    text.width = 1;
+    text.color = "Orange";
+    text.fontSize = 30;
+    panel.addControl(text);
+
+    var text1 = new BABYLON.GUI.TextBlock();
+    text1.text = 'W A S D keys to move\nQ E keys to grab objects\narrow keys and mouse to rotate'
+    text1.height = "100px";
+    text1.width = 1;
+    text1.color = "Orange";
+    text1.fontSize = 20;
+    panel.addControl(text1);
+
+    var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "close");
+    buttonS.width = 0.30;
+    buttonS.height = "40px";
+    buttonS.color = "orange";
+    buttonS.fontSize = 20;
+    buttonS.cornerRadius = 20;
+    buttonS.onPointerUpObservable.add(function () {
+        messageContainer.dispose()
+    });
+    panel.addControl(buttonS);
+
+
+
 }
