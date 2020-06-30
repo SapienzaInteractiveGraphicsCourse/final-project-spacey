@@ -4,21 +4,7 @@ var engine = new BABYLON.Engine(canvas, true);
 var bonesOffset = [];
 var actualBones = [];
 var pos;
-function getHeightAtOctreeGroundCoordinates(x, z) {
 
-    var height;
-    var origin = new BABYLON.Vector3(x, 10, z);
-    var down = new BABYLON.Vector3(x, -10, z);
-
-    var ray = new BABYLON.Ray(origin, down);
-    var hit = scene.pickWithRay(ray);
-
-    if (hit.pickedPoint) {
-        height = hit.pickedPoint.y;
-    }
-
-    return height;
-}
 function toRad(deg) { return deg * Math.PI / 180; }
 
 function rotateVector(vect, rot) {
@@ -151,7 +137,7 @@ var createScene = function () {
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
         var boy = scene.getMeshByName("Boy");
-        boy.position = new BABYLON.Vector3(9, 5, -15);
+        boy.position = new BABYLON.Vector3(9, 5, -35);
         boy.scaling = new BABYLON.Vector3(5, 5, 5);
         boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD); //so that object launches aligned with conventional world axis
         //shadowGenerator.getShadowMap().renderList.push(boy);
@@ -159,8 +145,8 @@ var createScene = function () {
         boy.checkCollisions = true;
         boy.showBoundingBox = true;
         boy.ellipsoidOffset = new BABYLON.Vector3(0, 2.5, 0);
-        boy.ellipsoid = new BABYLON.Vector3(1.5, 3, 1.5);
-        boy.setEllipsoidPerBoundingBox(scene);
+        boy.ellipsoid = new BABYLON.Vector3(1.5, 2.5, 1.75);
+        //boy.setEllipsoidPerBoundingBox(scene);
         boy.showEllipsoid(scene);
         boy.visibility = .99;
 
@@ -177,6 +163,12 @@ var createScene = function () {
         });
         ground.material = groundMat;
         ground.checkCollisions = true;
+
+        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {}, scene); 
+        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+
+        myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+        sphere.material = myMaterial;
 
         var turnboi = toRad(15);
         var flagImp = 0;
@@ -232,47 +224,52 @@ var createScene = function () {
                     break;
             }
         });
-        console.log("BH", boy.position);
 
         boy.isPickable = false;
-        function vecToLocal(vector, mesh){
-            var m = mesh.getWorldMatrix();
+
+        function GlobalToLocal(vector, mesh){
+            var m = new BABYLON.Matrix();
+            mesh.getWorldMatrix().invertToRef(m);
             var v = BABYLON.Vector3.TransformCoordinates(vector, m);
             return v;        
         }
 
-        function castRay(){       
-            var origin = boy.position;
-        
-            var forward = new BABYLON.Vector3(0,-1,0);       
-            forward = vecToLocal(forward, boy);
-        
-            var direction = forward.subtract(origin);
-            direction = BABYLON.Vector3.Normalize(direction);
-        
-            var length = 100;
-        
-            var ray = new BABYLON.Ray(origin, direction, length);
+        function castRayNew(){
 
-            let rayHelper = new BABYLON.RayHelper(ray);     
-            rayHelper.show(scene);      
+            var ray = new BABYLON.Ray();
+            var rayHelper = new BABYLON.RayHelper(ray);
+            
+            var localMeshDirection = new BABYLON.Vector3(0, -1, 0);
 
-            var hit = scene.pickWithRay(ray);
-
-            if (hit.pickedMesh){
-               console.log("Hit", hit.pickedPoint);
+            var localMeshOrigin = GlobalToLocal(boy.position, boy);
+            var length = 20;
+            
+            rayHelper.attachToMesh(boy, localMeshDirection, localMeshOrigin, length);
+            rayHelper.show(scene);
+            var hitInfo = ray.intersectsMeshes([ground]);
+            if(hitInfo.length){               
+                    sphere.setEnabled(true);
+                    sphere.position.copyFrom(hitInfo[0].pickedPoint);
+                    //console.log(hitInfo[0].pickedPoint);
+                    console.log("Boy Y", ( boy.position.y));
+                    console.log("Grnd Y", (hitInfo[0].pickedPoint.y)  );
+                    var vy = boy.position.subtract(hitInfo[0].pickedPoint).length()/(scene.getEngine().getDeltaTime()/1000);
+                    boy.speed.y = -v*v*vy;
             }
-        }
+            else {
+                sphere.setEnabled(false);
+            }
 
+        }
 
         scene.registerBeforeRender(function () {
 
+            castRayNew();
             if (flagImp) {
                 boy.moveWithCollisions(boy.speed);
                 boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
             }
-            castRay();
-
+            console.log("Sp: ", boy.speed);
         });
 
         actualBones = {
