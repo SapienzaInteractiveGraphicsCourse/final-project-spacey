@@ -70,7 +70,8 @@ var createScene = function () {
     engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
-
+    var acc_V = 0.98;
+    var acc_H = 1;
     scene.gravity = new BABYLON.Vector3(0, -9.8, 0);
     scene.collisionsEnabled = true;
 
@@ -236,25 +237,28 @@ var createScene = function () {
 
         function castRayNew(){
 
-            var ray = new BABYLON.Ray();
-            var rayHelper = new BABYLON.RayHelper(ray);
+            var rayY = new BABYLON.Ray();
+            var rayHelperY = new BABYLON.RayHelper(rayY);
             
-            var localMeshDirection = new BABYLON.Vector3(0, -1, 0);
+            var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
 
-            var localMeshOrigin = GlobalToLocal(boy.position, boy);
+            var localMeshOriginY = GlobalToLocal(boy.position, boy);
             var length = 20;
             
-            rayHelper.attachToMesh(boy, localMeshDirection, localMeshOrigin, length);
-            rayHelper.show(scene);
-            var hitInfo = ray.intersectsMeshes([ground]);
-            if(hitInfo.length){               
+            rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+            rayHelperY.show(scene);
+            var hitInfoY = rayY.intersectsMeshes([ground]);
+            if(hitInfoY.length){               
                     sphere.setEnabled(true);
-                    sphere.position.copyFrom(hitInfo[0].pickedPoint);
+                    sphere.position.copyFrom(hitInfoY[0].pickedPoint);
                     //console.log(hitInfo[0].pickedPoint);
                     console.log("Boy Y", ( boy.position.y));
-                    console.log("Grnd Y", (hitInfo[0].pickedPoint.y)  );
-                    var vy = boy.position.subtract(hitInfo[0].pickedPoint).length()/(scene.getEngine().getDeltaTime()/1000);
-                    boy.speed.y = -v*v*vy;
+                    console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
+                    var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
+                    if (sy>0.4) boy.speed.y = -Math.sqrt(2*acc_V*sy);
+                    else boy.speed.y = 0;
+                    //var vy = boy.position.subtract(hitInfoY[0].pickedPoint).length()/(scene.getEngine().getDeltaTime()/1000);
+                    //boy.speed.y = -v*v*vy;
             }
             else {
                 sphere.setEnabled(false);
@@ -266,6 +270,15 @@ var createScene = function () {
 
             castRayNew();
             if (flagImp) {
+/*                if ( Math.abs(boy.speed.y) > Math.max( Math.abs(boy.speed.x),Math.abs(boy.speed.z) ) ){
+                    console.log("!!!!!!!!!!!!!!!!!!!!!!!");
+                    boy.speed.x = boy.speed.x + ( acc_H*(scene.getEngine().getDeltaTime()/1000) )*impulseDirection.x;
+                    boy.speed.z = boy.speed.z + ( acc_H*(scene.getEngine().getDeltaTime()/1000) )*impulseDirection.z;
+                }
+                else {
+                    boy.speed.x = v * impulseDirection.x;
+                    boy.speed.z = v * impulseDirection.z;
+                }*/
                 boy.moveWithCollisions(boy.speed);
                 boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
             }
