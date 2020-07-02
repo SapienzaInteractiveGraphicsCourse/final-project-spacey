@@ -3,7 +3,6 @@ var engine = new BABYLON.Engine(canvas, true);
 
 var bonesOffset = [];
 var actualBones = [];
-var pos;
 
 function toRad(deg) { return deg * Math.PI / 180; }
 
@@ -70,8 +69,6 @@ var createScene = function () {
     engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
-    var acc_V = 0.98;
-    var acc_H = 1;
     scene.gravity = new BABYLON.Vector3(0, -9.8, 0);
     scene.collisionsEnabled = true;
 
@@ -112,10 +109,10 @@ var createScene = function () {
         nav.position.y = 2;
         nav.position.z = r;
         nav.ellipsoidMesh.position = nav.position.add(nav.ellipsoidOffset);
-        var path3d = new BABYLON.Path3D(points);
+/*        var path3d = new BABYLON.Path3D(points);
         var normals = path3d.getNormals();
         var theta = Math.acos(BABYLON.Vector3.Dot(BABYLON.Axis.Z, normals[0]));
-        nav.rotate(BABYLON.Axis.Y, theta, BABYLON.Space.WORLD);
+        nav.rotate(BABYLON.Axis.Y, theta, BABYLON.Space.WORLD);*/
 
         /*        var i=0;
                 scene.registerAfterRender(function() {
@@ -138,13 +135,13 @@ var createScene = function () {
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", "boy_new.babylon", scene, function (newMeshes, particleSystems, skeletons) {
 
         var boy = scene.getMeshByName("Boy");
-        boy.position = new BABYLON.Vector3(9, 5, -35);
+        boy.position = new BABYLON.Vector3(-9, 5, -25);
         boy.scaling = new BABYLON.Vector3(5, 5, 5);
         boy.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.WORLD); //so that object launches aligned with conventional world axis
         //shadowGenerator.getShadowMap().renderList.push(boy);
         boy.applyGravity = true;
         boy.checkCollisions = true;
-        boy.showBoundingBox = true;
+        //boy.showBoundingBox = true;
         boy.ellipsoidOffset = new BABYLON.Vector3(0, 2.5, 0);
         boy.ellipsoid = new BABYLON.Vector3(1.5, 2.5, 1.75);
         //boy.setEllipsoidPerBoundingBox(scene);
@@ -173,9 +170,20 @@ var createScene = function () {
 
         var turnboi = toRad(15);
         var flagImp = 0;
-        //Astronaut rotation by keyboard
+
         var impulseDirection = new BABYLON.Vector3(0, 0, 1);
-        var v = 0.04;
+        var speed = 1.5; //express in m/s
+        var gravity_y = 1.62;
+
+        var theta = toRad(45);
+        var Y_thresh = 0.3;
+
+        var vectorsWorld = boy.getBoundingInfo().boundingBox.vectorsWorld;
+        var height = (vectorsWorld[1].y - vectorsWorld[0].y)/50; //Factor 50 is added since map is too small so height is larger than normal
+        var HERO_HEIGHT = 1.70;//meters
+        var SCALE_FACTOR = height / HERO_HEIGHT;
+        var v = speed*SCALE_FACTOR; //in coordinates/second
+        var acc_V = gravity_y*SCALE_FACTOR; 
 
         var observer_dir = scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
@@ -227,7 +235,7 @@ var createScene = function () {
         });
 
         boy.isPickable = false;
-
+        
         function GlobalToLocal(vector, mesh){
             var m = new BABYLON.Matrix();
             mesh.getWorldMatrix().invertToRef(m);
@@ -237,6 +245,7 @@ var createScene = function () {
 
         function castRayNew(){
 
+            //Vertical ray
             var rayY = new BABYLON.Ray();
             var rayHelperY = new BABYLON.RayHelper(rayY);
             
@@ -248,41 +257,41 @@ var createScene = function () {
             rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
             rayHelperY.show(scene);
             var hitInfoY = rayY.intersectsMeshes([ground]);
+
             if(hitInfoY.length){               
                     sphere.setEnabled(true);
                     sphere.position.copyFrom(hitInfoY[0].pickedPoint);
-                    //console.log(hitInfo[0].pickedPoint);
-                    console.log("Boy Y", ( boy.position.y));
-                    console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
+
+                    //console.log("Boy Y", ( boy.position.y));
+                    //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
                     var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
-                    if (sy>0.4) boy.speed.y = -Math.sqrt(2*acc_V*sy);
-                    else boy.speed.y = 0;
-                    //var vy = boy.position.subtract(hitInfoY[0].pickedPoint).length()/(scene.getEngine().getDeltaTime()/1000);
-                    //boy.speed.y = -v*v*vy;
+
+                    var t_delta = (scene.getEngine().getDeltaTime()/1000);
+                    if (sy < Y_thresh) { //Y_thresh is the threshold, below this we consider touching ground
+                        boy.speed.x = v*impulseDirection.x*Math.cos(theta);
+                        boy.speed.y = v*Math.sin(theta);
+                        boy.speed.z = v*impulseDirection.z*Math.cos(theta);
+                    }
+                    else {
+                        boy.speed.x = v*impulseDirection.x*Math.cos(theta);
+                        boy.speed.y = boy.speed.y - acc_V*t_delta;
+                        boy.speed.z = v*impulseDirection.z*Math.cos(theta);
+                    }
             }
             else {
                 sphere.setEnabled(false);
             }
-
         }
 
         scene.registerBeforeRender(function () {
-
-            castRayNew();
             if (flagImp) {
-/*                if ( Math.abs(boy.speed.y) > Math.max( Math.abs(boy.speed.x),Math.abs(boy.speed.z) ) ){
-                    console.log("!!!!!!!!!!!!!!!!!!!!!!!");
-                    boy.speed.x = boy.speed.x + ( acc_H*(scene.getEngine().getDeltaTime()/1000) )*impulseDirection.x;
-                    boy.speed.z = boy.speed.z + ( acc_H*(scene.getEngine().getDeltaTime()/1000) )*impulseDirection.z;
-                }
-                else {
-                    boy.speed.x = v * impulseDirection.x;
-                    boy.speed.z = v * impulseDirection.z;
-                }*/
+
+                castRayNew();
+
                 boy.moveWithCollisions(boy.speed);
                 boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
             }
-            console.log("Sp: ", boy.speed);
+            //console.log("Sp: ", boy.speed);
         });
 
         actualBones = {
