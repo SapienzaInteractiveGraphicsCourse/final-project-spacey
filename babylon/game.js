@@ -61,14 +61,6 @@ let createScene = function () {
     farCamera.parent = CoT;
     CoT.position = FAR_CAM_POS;
 
-    nearCamera = new BABYLON.ArcRotateCamera("nearCamera", 0, 0, 0, FAR_CAM_POS, scene);
-    nearCamera.lowerRadiusLimit = 0;
-    nearCamera.upperRadiusLimit = 50;
-    nearCamera.wheelDeltaPercentage = 0.01;
-    nearCamera.checkCollisions = true;
-    nearCamera.applyGravity = true;
-    nearCamera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
-
     var light = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 100, -200), scene);
     light.intensity = 0.8;
     light.diffuse = new BABYLON.Color3(1, 1, 1);
@@ -217,6 +209,12 @@ let createScene = function () {
         boy.applyGravity = true;
         boy.material.freeze();
         boy.alwaysSelectAsActiveMesh = true
+        var vectorsWorld = boy.getBoundingInfo().boundingBox.vectorsWorld;
+        boy.height = vectorsWorld[1].y - vectorsWorld[0].y;
+        var HERO_HEIGHT = 2.0;//meters
+        var SCALE_FACTOR = boy.height / HERO_HEIGHT;
+        SPEED_MODULE = SPEED_MODULE * SCALE_FACTOR;
+        GRAVITY_ = GRAVITY_ * SCALE_FACTOR;
         //boy.doNotSyncBoundingInfo = true; //uncomment only if not use physics
         actualBones = {
             "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
@@ -254,6 +252,21 @@ let createScene = function () {
                 "id": actualBones[key].id
             };
         }
+        var offset = new BABYLON.Vector3(0, 2, 0);
+        var focusTarget = new BABYLON.TransformNode("offset");
+        focusTarget.parent = boy;
+        focusTarget.position = offset;
+
+        nearCamera = new BABYLON.ArcRotateCamera("nearCamera", Math.PI / 2, 0, 2, offset, scene);
+        nearCamera.lowerRadiusLimit = 0;
+        nearCamera.lockedTarget = focusTarget;
+        nearCamera.upperRadiusLimit = 50;
+        nearCamera.wheelDeltaPercentage = 0.01;
+        nearCamera.cameraAcceleration = 0.05
+        nearCamera.maxCameraSpeed = 10
+        nearCamera.checkCollisions = true;
+        nearCamera.applyGravity = true;
+        nearCamera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
 
         // make change of animation smooter
         skeletons[0].animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
@@ -264,41 +277,103 @@ let createScene = function () {
         let walking = walkAnimation(actualBones)
         let jumping = jumpAnimation(actualBones)
         let standing = standAnimation(actualBones)
-        document.addEventListener('keydown', function (event) {
 
-
-            if (event.keyCode == 49) { //1 key
-                jumping.stop();
-                standing.stop();
-                walking.play(true); //loop
-            }
-            else if (event.keyCode == 50) { //2 key
-                standing.stop();
-                walking.stop();
-                jumping.speedRatio = 0.5; // we can set velocity according to time of flight
-                jumping.play();
-
-            }
-            else if (event.keyCode == 51) { //3 key
-                walking.stop();
-                jumping.stop();
-                standing.play();
-
-            }
-            else if (event.keyCode == 52) { //4 key
-                walking.pause();
-                jumping.pause();
-                standing.pause();
-
+        /******************* START PHYSIC *****************/
+        BOY = { x0: boy.position.x, y0: boy.position.y, z0: boy.position.z, v0x: 0.0, v0y: 0.0, v0z: 0.0 }
+        var move = false;
+        scene.onKeyboardObservable.add((kbInfo) => {
+            switch (kbInfo.type) {
+                case BABYLON.KeyboardEventTypes.KEYDOWN:
+                    switch (kbInfo.event.key) {
+                        case "w":
+                        case "W":
+                            jumping.stop();
+                            standing.stop();
+                            walking.play(true); //loop
+                            move = true;
+                            moveWithPhysics();
+                            break
+                        case "a":
+                        case "A":
+                            SPEED_DIR_ANGLE -= BABYLON.Tools.ToRadians(10)
+                            boy.rotation.y = SPEED_DIR_ANGLE
+                            break
+                        case "d":
+                        case "D":
+                            SPEED_DIR_ANGLE += BABYLON.Tools.ToRadians(10)
+                            boy.rotation.y = SPEED_DIR_ANGLE
+                            break
+                        case " ":
+                            jumping.play();
+                            walking.stop();
+                            standing.stop();
+                            break;
+                        default:
+                            walking.pause();
+                            jumping.pause();
+                            standing.pause();
+                            break
+                    }
+                    break;
+                case BABYLON.KeyboardEventTypes.KEYUP:
+                    move = false;
+                    walking.pause();
+                    jumping.pause();
+                    standing.play(false);
+                    break;
             }
         });
+
+        scene.registerBeforeRender(function () {
+            if (!move && getContactGround()) {
+                TIME = 0;
+                GRAVITY_ = 0;
+                BOY.v0x = 0.0;
+                BOY.v0y = 0.0;
+                BOY.v0z = 0.0;
+                BOY.x0 = boy.position.x
+                BOY.y0 = boy.position.y
+                BOY.z0 = boy.position.z
+            }
+
+            boy.position.x = BOY.x0 + BOY.v0x * TIME;
+            boy.position.y = BOY.y0 + BOY.v0y * TIME + 1 / 2 * GRAVITY_ * Math.pow(TIME, 2);
+            boy.position.z = BOY.z0 + BOY.v0z * TIME;
+        })
+
+        function moveWithPhysics() {
+            if (getContactGround()) {
+                if (strideExpired) {
+                    TIME = 0;
+                    BOY.x0 = boy.position.x;
+                    BOY.y0 = boy.position.y;
+                    BOY.z0 = boy.position.z;
+                    BOY.v0x = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
+                    BOY.v0y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
+                    BOY.v0z = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
+                    GRAVITY_ = GRAVITY * SCALE_FACTOR;
+                    strideExpired = false;
+                } else {
+                    BOY.x0 = boy.position.x;
+                    BOY.y0 = boy.position.y;
+                    BOY.z0 = boy.position.z;
+                    BOY.v0x = 0.0;
+                    BOY.v0y = 0.0;
+                    BOY.v0z = 0.0;
+                    GRAVITY_ = 0.0;
+                    strideExpired = true;
+
+                }
+            }
+        }
+        /******************* END PHYSIC *****************/
 
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
         LOADING.subtitle.text = 'landing: ' + ld + '%'
     });
     scene.shadowsEnabled = true;
-    scene.gravity = new BABYLON.Vector3(0, -1.62, 0);
+    //scene.gravity = new BABYLON.Vector3(0, -1.62, 0);
     scene.collisionsEnabled = true;
     scene.blockMaterialDirtyMechanism = true;
     farCamera.checkCollisions = true;
@@ -308,23 +383,67 @@ let createScene = function () {
     return scene;
 };
 
-const LOADING = createLoading();
+/******************* START PHYSIC *****************/
 
+
+var TIME = 0;
+var BOY;
+var SPEED_ANGLE = BABYLON.Tools.ToRadians(45.0);
+var SPEED_DIR_ANGLE = BABYLON.Tools.ToRadians(0);
+var SPEED_MODULE = SPEED;
+var GRAVITY_ = GRAVITY;
+
+/******************* END PHYSIC *****************/
+
+
+
+const LOADING = createLoading();
 var scene = createScene();
 
-// Render Scene
 engine.runRenderLoop(function () {
+    // scene.render();
+    // TIME += scene.getEngine().getDeltaTime() / 1000;
     if (scene.isReady() && LOADING.timeout) {
         if (LOADING.scene.isReady()) {
             LOADING.scene.dispose();
             showGUI();
         }
         scene.render();
+        TIME += scene.getEngine().getDeltaTime() / 1000;
     } else if (LOADING.scene.isReady()) {
         LOADING.scene.render();
     }
-
 });
+
+/******************* START PHYSIC *****************/
+
+var strideExpired = false;
+
+function globalToLocal(vector, mesh) {
+    var m = new BABYLON.Matrix();
+    mesh.getWorldMatrix().invertToRef(m);
+    var v = BABYLON.Vector3.TransformCoordinates(vector, m);
+    return v;
+}
+
+function getContactGround() {
+    var rayY = new BABYLON.Ray();
+    var rayHelperY = new BABYLON.RayHelper(rayY);
+    var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
+    var localMeshOriginY = globalToLocal(boy.position, boy);
+    var length = 10;
+    rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+    var hitInfoY = rayY.intersectsMeshes([ground]);
+    var offset = 0.2
+    if (hitInfoY.length) {
+        var sy = boy.height / 2 - offset + boy.position.subtract(hitInfoY[0].pickedPoint).length();
+        if (sy > boy.height / 2) return false;
+        else return true;
+    } else return true;
+}
+
+/******************* END PHYSIC *****************/
+
 
 window.addEventListener('resize', function () {
     engine.resize();
@@ -1142,7 +1261,6 @@ function fastZoom() {
         godrays2.mesh.freezeWorldMatrix();
         godrays2.mesh.doNotSyncBoundingInfo = true;
         nearCamera.position = CoT.position;
-        nearCamera.target = boy.position.clone().add(new BABYLON.Vector3(0, 2, 0))
         nearCamera.attachControl(canvas, true);
         scene.activeCamera = nearCamera;
         godrays.dispose(farCamera);
