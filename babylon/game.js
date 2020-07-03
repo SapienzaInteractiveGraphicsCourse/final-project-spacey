@@ -23,6 +23,8 @@ let widthGround;
 let heightGround;
 let optimizer;
 let nav;
+let target;
+let text2;
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
@@ -105,7 +107,7 @@ let createScene = function () {
     shadowGenerator.bias = 0.00001;
 
     // Skybox
-    let skybox = BABYLON.Mesh.CreateSphere("galaxy", 10, 500.0, scene);
+    let skybox = BABYLON.Mesh.CreateSphere("galaxy", 10, 1000.0, scene);
     let skyboxMaterial = new BABYLON.StandardMaterial("galaxyMaterial", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.Texture(SKY_PATH, scene, true);
@@ -117,7 +119,7 @@ let createScene = function () {
     skybox.doNotSyncBoundingInfo = true;
     skybox.convertToUnIndexedMesh();
 
-    if (EARTH) {
+    if (MOON) {
         let earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 10 }, scene);
         earth.position = new BABYLON.Vector3(50, 100, 200);
         earth.rotation = new BABYLON.Vector3(0, 0, 23.5);
@@ -167,6 +169,13 @@ let createScene = function () {
         ground.material.freeze();
         ground.freezeWorldMatrix();
         ground.specularColor = new BABYLON.Color3(0, 0, 0);
+        //ground.isPickable = true;
+        // scene.onPointerDown = function (evt, pickResult) {
+        //     // if the click hits the ground object, we change the impact position
+        //     if (pickResult.hit) {
+        //         console.log("pick-hit: " + pickResult.pickedPoint);
+        //     }
+        // }
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
         LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
@@ -182,6 +191,25 @@ let createScene = function () {
         nav.checkCollisions = true;
         nav.material.freeze();
         nav.freezeWorldMatrix();
+    }, function (loading) {
+        var ld = Math.floor(loading.loaded / loading.total * 100.0)
+        LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
+    });
+
+
+    BABYLON.SceneLoader.ImportMesh("Target", "../models/", OBJ_PATH_2, scene, function (newMeshes, particleSystems, skeletons) {
+        target = scene.getMeshByName(newMeshes[0].name);
+        target.position = TARGET_POS;
+        if (!MOON) {
+            target.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+        }
+        //target.rotation = new BABYLON.Vector3(0, 0, 0)
+        shadowGenerator.addShadowCaster(target);
+        shadowGenerator.getShadowMap().renderList.push(target);
+        target.receiveShadows = true;
+        target.checkCollisions = true;
+        target.material.freeze();
+        target.freezeWorldMatrix();
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
         LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
@@ -279,6 +307,7 @@ let createScene = function () {
                             walking.play(true); //loop
                             move = true;
                             moveWithPhysics();
+                            updateRadar();
                             break
                         case "a":
                         case "A":
@@ -422,7 +451,7 @@ function getContactGround() {
     var rayHelperY = new BABYLON.RayHelper(rayY);
     var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
     var localMeshOriginY = globalToLocal(boy.position, boy);
-    var length = 10;
+    var length = 50;
     rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
     var hitInfoY = rayY.intersectsMeshes([ground]);
     var offset = 0.2
@@ -436,9 +465,15 @@ function getContactGround() {
 /******************* END PHYSIC *****************/
 
 scene.executeWhenReady(function () {
-    setToGround(nav);
+    target.position = setToGround(target);
+    nav.position = setToGround(nav);
 })
 
+function updateRadar() {
+    pos1.left = -(boy.position.x / widthGround * mapImage.widthInPixels / 4)
+    pos1.top = boy.position.z / heightGround * mapImage.heightInPixels / 4
+    text2.text = "you: x: " + Math.round(boy.position.x) + " y: " + Math.round(boy.position.z);
+}
 function setToGround(mesh) {
     var rayY = new BABYLON.Ray();
     var rayHelperY = new BABYLON.RayHelper(rayY);
@@ -448,8 +483,9 @@ function setToGround(mesh) {
     rayHelperY.attachToMesh(mesh, localMeshDirectionY, localMeshOriginY, length);
     var hitInfoY = rayY.intersectsMeshes([ground]);
     if (hitInfoY.length) {
-        mesh.position = hitInfoY[0].pickedPoint;
+        return hitInfoY[0].pickedPoint;
     }
+    else return mesh.position;
 }
 
 window.addEventListener('resize', function () {
@@ -1371,8 +1407,8 @@ function showGUI() {
     panel.addControl(startButton);
 
     rect2 = new BABYLON.GUI.Rectangle();
-    rect2.height = 0.25;
-    rect2.width = 0.1;
+    rect2.height = 0.3;
+    rect2.width = 0.15;
     rect2.cornerRadius = 30;
     rect2.color = "Orange";
     rect2.left = '40%';
@@ -1410,8 +1446,8 @@ function showGUI() {
     let panel2 = new BABYLON.GUI.StackPanel();
     rect3.addControl(panel2);
 
-    let text2 = new BABYLON.GUI.TextBlock();
-    text2.text = "you: x: y:";
+    text2 = new BABYLON.GUI.TextBlock();
+    text2.text = "you: x: " + Math.round(boy.position.x) + " y: " + Math.round(boy.position.z);
     text2.height = "15px";
     text2.width = 1;
     text2.color = "Orange";
@@ -1419,7 +1455,7 @@ function showGUI() {
     panel2.addControl(text2);
 
     let text3 = new BABYLON.GUI.TextBlock();
-    text3.text = "target: x: y:";
+    text3.text = "target: x: " + Math.round(target.position.x) + ", y: " + Math.round(target.position.z);
     text3.height = "15px";
     text3.width = 1;
     text3.color = "Green";
@@ -1430,10 +1466,10 @@ function showGUI() {
         widthGround = ground.getBoundingInfo().boundingBox.extendSize.x * 2
         heightGround = ground.getBoundingInfo().boundingBox.extendSize.z * 2
 
-        pos1.left = boy.position.x / widthGround * mapImage.widthInPixels / 4
+        pos1.left = -(boy.position.x / widthGround * mapImage.widthInPixels / 4)
         pos1.top = boy.position.z / heightGround * mapImage.heightInPixels / 4
 
-        pos2.left = TARGET_POS.x / widthGround * mapImage.widthInPixels / 4
+        pos2.left = -(TARGET_POS.x / widthGround * mapImage.widthInPixels / 4)
         pos2.top = TARGET_POS.z / heightGround * mapImage.heightInPixels / 4
     })
 
