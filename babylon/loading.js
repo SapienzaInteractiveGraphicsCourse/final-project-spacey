@@ -1,4 +1,6 @@
 var createLoading = function () {
+    const SOUND_ENABLED = 'sound_enabled_label'
+
     engine.setHardwareScalingLevel(1);
     var scene = new BABYLON.Scene(engine);
     var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 3, 30, new BABYLON.Vector3(0, -1, 5), scene);
@@ -50,8 +52,15 @@ var createLoading = function () {
     })
     var loading = { scene: scene, title: text1, subtitle: text2, timeout: false }
     scene.executeWhenReady(function () {
+        var music = new BABYLON.Sound("beep", "../sounds/beep.wav", scene, null, {
+            loop: false,
+            autoplay: true,
+            volume: 0.1
+        });
+        BABYLON.Engine.audioEngine.setGlobalVolume(1);
         fading(text1, 30, 1, 0)
         setTimeout(function () {
+            music.dispose()
             loading.timeout = true
         }, 10000)
     })

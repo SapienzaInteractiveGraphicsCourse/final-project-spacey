@@ -6,12 +6,11 @@ var text2;
 var text3;
 var optimizer;
 let boy;
-
+const SOUND_ENABLED = 'sound_enabled_label'
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
-    //engine.loadingUIText = "START...";
 
     camera = new BABYLON.ArcRotateCamera("Camera", BABYLON.Tools.ToRadians(300),
         BABYLON.Tools.ToRadians(80), 60, new BABYLON.Vector3(2, 0, 85), scene);
@@ -220,7 +219,7 @@ let createScene = function () {
     advancedTexture.addControl(panel2);
 
     text3 = new BABYLON.GUI.TextBlock();
-    text3.text = 'select the mission'
+    text3.text = 'wear headphones\nfor a better experience'
     text3.height = "80px";
     text3.width = 1;
     text3.color = "Orange";
@@ -279,40 +278,6 @@ let createScene = function () {
         window.location.href = "mission1.html";
     });
     panel.addControl(buttonS);
-
-    var soundContainer = new BABYLON.GUI.Rectangle();
-    soundContainer.width = 0.40;
-    soundContainer.height = "40px";
-    soundContainer.cornerRadius = 20;
-    soundContainer.color = "Orange";
-    soundContainer.thickness = 0;
-    panel.addControl(soundContainer);
-
-    var panel3 = new BABYLON.GUI.StackPanel();
-    panel3.width = 0.5;
-    panel3.height = 1;
-    panel3.isVertical = false;
-    panel3.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-    panel3.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-    soundContainer.addControl(panel3);
-
-    var checkbox = new BABYLON.GUI.Checkbox();
-    checkbox.width = "20px";
-    checkbox.height = "20px";
-    checkbox.isChecked = true;
-    checkbox.color = "orange";
-    checkbox.onIsCheckedChangedObservable.add(function (value) {
-        BABYLON.Engine.audioEngine.setGlobalVolume(+value);
-    });
-    panel3.addControl(checkbox);
-
-    var header = new BABYLON.GUI.TextBlock();
-    header.text = "sound";
-    header.width = "70px";
-    header.paddingLeft = "10px";
-    header.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-    header.color = "orange";
-    panel3.addControl(header);
 
     scene.shadowsEnabled = true;
 
@@ -421,10 +386,13 @@ engine.runRenderLoop(function () {
     }
 
 });
-
-// scene.executeWhenReady(function () {
-// })
-
+scene.executeWhenReady(function () {
+    var music = new BABYLON.Sound("back", "../sounds/home.wav", scene, null, {
+        loop: true,
+        autoplay: true,
+        volume: 0.1
+    });
+})
 window.addEventListener('resize', function () {
     engine.resize();
 });

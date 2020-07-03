@@ -21,7 +21,9 @@ let godrays2;
 let dirLight;
 let widthGround;
 let heightGround;
-var optimizer;
+let optimizer;
+let nav;
+
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
     let scene = new BABYLON.Scene(engine);
@@ -135,6 +137,25 @@ let createScene = function () {
         earth.convertToUnIndexedMesh();
     }
 
+
+    var step = new BABYLON.Sound("back", "../sounds/step.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 0.1
+    });
+
+    var step1 = new BABYLON.Sound("back", "../sounds/step1.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 0.1
+    });
+
+    var step2 = new BABYLON.Sound("back", "../sounds/step2.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 0.1
+    });
+
     BABYLON.SceneLoader.ImportMesh("Map", "../models/", MAP_PATH, scene, function (newMeshes, particleSystems, skeletons) {
         ground = scene.getMeshByName(newMeshes[0].name);
         ground.position = new BABYLON.Vector3(0, 0, 0);
@@ -146,59 +167,25 @@ let createScene = function () {
         ground.material.freeze();
         ground.freezeWorldMatrix();
         ground.specularColor = new BABYLON.Color3(0, 0, 0);
-
-        // customMesh = BABYLON.Mesh.CreateGround("ground1", 100, 100, 1000, scene, true);
-        // customMesh.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind, true);
-        // customMesh.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind, true);
-        // customMesh.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.UVKind, true);
-
-        // var pdata = ground.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-        // var ndata = ground.getVerticesData(BABYLON.VertexBuffer.NormalKind);
-        // var udata = ground.getVerticesData(BABYLON.VertexBuffer.UVKind);
-        // var idata = ground.getIndices();
-        //var row = Math.round(Math.sqrt(pdata.length) / 3)
-
-        // var terrainSub = 0;               // 100 terrain subdivisions
-        // var params = {
-        //     mapData: pdata,               // data map declaration : what data to use ?
-        //     mapSubX: row,               // how are these data stored by rows and columns
-        //     mapSubZ: row,
-        //     terrainSub: terrainSub          // how many terrain subdivisions wanted
-        // }
-        // var terrain = new BABYLON.DynamicTerrain("t", params, scene);
-
-        // terrain.wireframe = true;
-        // console.log('ok')
-        // ground.dispose()
-
-        // customMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, pdata);
-        // customMesh.setVerticesData(BABYLON.VertexBuffer.NormalKind, ndata);
-        // customMesh.setVerticesData(BABYLON.VertexBuffer.UVKind, udata);
-        // customMesh.setIndices(idata);
-        // customMesh.optimize(512);
-        // customMesh = customMesh.updateCoordinateHeights()
-        // var mat = new BABYLON.StandardMaterial("mat", scene);
-        // customMesh.material = mat;
-        // customMesh.position = new BABYLON.Vector3.Zero()
-        //ground.doNotSyncBoundingInfo = true; //uncomment only if not use physics
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
         LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
     });
 
-
-    // BABYLON.SceneLoader.Append("../models/", OBJ_PATH_1, scene, function (newMeshes) {
-    //     let nav = scene.getMeshByName("MMSEV");
-    //     nav.position = OBJ_POS_1;
-    //     nav.scaling = new BABYLON.Vector3(2, 2, 2);
-    //     shadowGenerator.addShadowCaster(nav);
-    //     shadowGenerator.getShadowMap().renderList.push(nav);
-    //     nav.receiveShadows = true;
-    //     nav.checkCollisions = true;
-    //     nav.material.freeze();
-    //     nav.freezeWorldMatrix();
-    //     nav.doNotSyncBoundingInfo = true;
-    // });
+    BABYLON.SceneLoader.ImportMesh("Nav", "../models/", OBJ_PATH_1, scene, function (newMeshes, particleSystems, skeletons) {
+        nav = scene.getMeshByName(newMeshes[0].name);
+        nav.position = OBJ_POS_1;
+        nav.scaling = new BABYLON.Vector3(3, 3, 3)
+        shadowGenerator.addShadowCaster(nav);
+        shadowGenerator.getShadowMap().renderList.push(nav);
+        nav.receiveShadows = true;
+        nav.checkCollisions = true;
+        nav.material.freeze();
+        nav.freezeWorldMatrix();
+    }, function (loading) {
+        var ld = Math.floor(loading.loaded / loading.total * 100.0)
+        LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
+    });
 
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", BOY_PATH, scene, function (newMeshes, particleSystems, skeletons) {
         boy = scene.getMeshByName(newMeshes[0].name);
@@ -343,27 +330,31 @@ let createScene = function () {
 
         function moveWithPhysics() {
             if (getContactGround()) {
-                if (strideExpired) {
-                    TIME = 0;
-                    BOY.x0 = boy.position.x;
-                    BOY.y0 = boy.position.y;
-                    BOY.z0 = boy.position.z;
-                    BOY.v0x = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
-                    BOY.v0y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
-                    BOY.v0z = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
-                    GRAVITY_ = GRAVITY * SCALE_FACTOR;
-                    strideExpired = false;
-                } else {
-                    BOY.x0 = boy.position.x;
-                    BOY.y0 = boy.position.y;
-                    BOY.z0 = boy.position.z;
-                    BOY.v0x = 0.0;
-                    BOY.v0y = 0.0;
-                    BOY.v0z = 0.0;
-                    GRAVITY_ = 0.0;
-                    strideExpired = true;
+                // if (strideExpired) {
+                TIME = 0;
+                BOY.x0 = boy.position.x;
+                BOY.y0 = boy.position.y;
+                BOY.z0 = boy.position.z;
+                BOY.v0x = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
+                BOY.v0y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
+                BOY.v0z = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
+                GRAVITY_ = GRAVITY * SCALE_FACTOR;
+                //strideExpired = false;
+                var steps = [step, step1, step2];
+                var randStep = steps[Math.floor(Math.random() * steps.length)];
 
-                }
+                randStep.play()
+
+                // } else {
+                //     BOY.x0 = boy.position.x;
+                //     BOY.y0 = boy.position.y;
+                //     BOY.z0 = boy.position.z;
+                //     BOY.v0x = 0.0;
+                //     BOY.v0y = 0.0;
+                //     BOY.v0z = 0.0;
+                //     GRAVITY_ = 0.0;
+                //     strideExpired = true;
+                // }
             }
         }
         /******************* END PHYSIC *****************/
@@ -444,6 +435,22 @@ function getContactGround() {
 
 /******************* END PHYSIC *****************/
 
+scene.executeWhenReady(function () {
+    setToGround(nav);
+})
+
+function setToGround(mesh) {
+    var rayY = new BABYLON.Ray();
+    var rayHelperY = new BABYLON.RayHelper(rayY);
+    var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
+    var localMeshOriginY = globalToLocal(mesh.position, mesh);
+    var length = 50;
+    rayHelperY.attachToMesh(mesh, localMeshDirectionY, localMeshOriginY, length);
+    var hitInfoY = rayY.intersectsMeshes([ground]);
+    if (hitInfoY.length) {
+        mesh.position = hitInfoY[0].pickedPoint;
+    }
+}
 
 window.addEventListener('resize', function () {
     engine.resize();
@@ -1322,6 +1329,18 @@ function typeWriter(callback) {
 }
 
 function showGUI() {
+
+    var music = new BABYLON.Sound("beep", "../sounds/" + TASK_SOUND, scene, null, {
+        loop: false,
+        autoplay: true,
+        volume: 3
+    });
+
+    var music2 = new BABYLON.Sound("back", "../sounds/" + BACK_SOUND, scene, null, {
+        loop: true,
+        autoplay: true,
+        volume: 0.05
+    });
 
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
