@@ -69,7 +69,7 @@ var createScene = function () {
     engine.enableOfflineSupport = false;
 
     var scene = new BABYLON.Scene(engine);
-    scene.gravity = new BABYLON.Vector3(0, -9.8, 0);
+    scene.gravity = new BABYLON.Vector3(0, -1.62, 0);
     scene.collisionsEnabled = true;
 
     var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 3, Math.PI / 4, 3, new BABYLON.Vector3(30, 30, 30), scene);
@@ -149,7 +149,6 @@ var createScene = function () {
         boy.visibility = .99;
 
         boy.speed = new BABYLON.Vector3(0, 0, 0.08);
-        boy.nextspeed = new BABYLON.Vector3(0, 0, 1);
 
         camera.lockedTarget = boy;
         // Ground (using a box not a plane)
@@ -170,21 +169,22 @@ var createScene = function () {
 
         var turnboi = toRad(15);
         var flagImp = 0;
+        var activatePhysics = 1;
 
         var impulseDirection = new BABYLON.Vector3(0, 0, 1);
-        var speed = 1.5; //express in m/s
-        var gravity_y = 1.62;
+        var SPEED = 1.5; //express in m/s
+        var GRAVITY_Y = 1.62;
 
         var theta = toRad(45);
-        var Y_thresh = 0.3;
+        var Y_THRESH = 0.3;
 
         var vectorsWorld = boy.getBoundingInfo().boundingBox.vectorsWorld;
         var height = (vectorsWorld[1].y - vectorsWorld[0].y)/50; //Factor 50 is added since map is too small so height is larger than normal
         var HERO_HEIGHT = 1.70;//meters
         var SCALE_FACTOR = height / HERO_HEIGHT;
-        var v = speed*SCALE_FACTOR; //in coordinates/second
-        var acc_V = gravity_y*SCALE_FACTOR; 
-
+        var v = SPEED*SCALE_FACTOR; //in coordinates/second
+        var acc_V = GRAVITY_Y*SCALE_FACTOR; 
+        
         var observer_dir = scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
@@ -194,40 +194,37 @@ var createScene = function () {
                         case "A":
                             boy.rotate(BABYLON.Axis.Y, -turnboi, BABYLON.Space.WORLD);
                             impulseDirection = rotateVector(impulseDirection, -turnboi);
-                            boy.nextspeed = rotateVector(boy.nextspeed, -turnboi);
-                            boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
                             break
 
                         //Rotate Right by an amgle specified by turnboi
                         case "d":
                         case "D":
                             boy.rotate(BABYLON.Axis.Y, turnboi, BABYLON.Space.WORLD);
-                            impulseDirection = rotateVector(impulseDirection, turnboi);;
-                            boy.nextspeed = rotateVector(boy.nextspeed, turnboi);
-                            boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
+                            impulseDirection = rotateVector(impulseDirection, turnboi);
                             break
 
                         //Apply impulse
                         case "w":
                         case "W":
                             flagImp = 1;
+                            activatePhysics = 1;
                             console.log("Velocity applied!!!");
-                            boy.nextspeed.x = v * impulseDirection.x;
-                            boy.nextspeed.z = v * impulseDirection.z;
-
-                            boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
-                            //boy.moveWithCollisions(boy.speed);
-                            walkAnimation(actualBones).play(true);
+                            stand.stop();
+                            walk.play(true);
                             break
 
                         //Stop || Remove impulse
                         case "s":
                         case "S":
                             flagImp = 0;
-                            boy.nextspeed.x = 0;
-                            boy.nextspeed.z = 0;
                             console.log("Key S|s pressed.....Stop!");
-                            standAnimation(actualBones).play(true);
+                            walk.stop();
+                            stand.play();
+                            break
+
+                        default:
+                            walk.pause();
+                            stand.pause();
                             break
                     }
                     break;
@@ -243,7 +240,7 @@ var createScene = function () {
             return v;        
         }
 
-        function castRayNew(){
+        function callPhysics(){
 
             //Vertical ray
             var rayY = new BABYLON.Ray();
@@ -267,15 +264,18 @@ var createScene = function () {
                     var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
 
                     var t_delta = (scene.getEngine().getDeltaTime()/1000);
-                    if (sy < Y_thresh) { //Y_thresh is the threshold, below this we consider touching ground
-                        boy.speed.x = v*impulseDirection.x*Math.cos(theta);
-                        boy.speed.y = v*Math.sin(theta);
-                        boy.speed.z = v*impulseDirection.z*Math.cos(theta);
-                    }
-                    else {
+                    if (sy > Y_THRESH) {
                         boy.speed.x = v*impulseDirection.x*Math.cos(theta);
                         boy.speed.y = boy.speed.y - acc_V*t_delta;
                         boy.speed.z = v*impulseDirection.z*Math.cos(theta);
+                    }
+                    else {
+                        if (flagImp) {
+                            boy.speed.x = v*impulseDirection.x*Math.cos(theta);
+                            boy.speed.y = v*Math.sin(theta);
+                            boy.speed.z = v*impulseDirection.z*Math.cos(theta);
+                        }
+                        else activatePhysics = 0;
                     }
             }
             else {
@@ -284,9 +284,9 @@ var createScene = function () {
         }
 
         scene.registerBeforeRender(function () {
-            if (flagImp) {
+            if (activatePhysics) {
 
-                castRayNew();
+                callPhysics();
 
                 boy.moveWithCollisions(boy.speed);
                 boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
@@ -335,7 +335,8 @@ var createScene = function () {
         skeletons[0].animationPropertiesOverride.enableBlending = true;
         skeletons[0].animationPropertiesOverride.blendingSpeed = 0.05;
         skeletons[0].animationPropertiesOverride.loopMode = 1;
-
+        var walk = walkAnimation(actualBones);
+        var stand = standAnimation(actualBones);
     });
     return scene;
 };
