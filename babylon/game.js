@@ -416,7 +416,7 @@ let createScene = function () {
                 callPhysics();
 
                 boy.moveWithCollisions(boy.speed);
-                boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
+                //boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
             }
         })
 
@@ -472,7 +472,7 @@ let createScene = function () {
 
                     //console.log("Boy Y", ( boy.position.y));
                     //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
-                    //var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
+                    var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
                     //console.log("sy", sy);
                     //console.log("sm", SPEED_MODULE);
                     //console.log("gra", GRAVITY_);
