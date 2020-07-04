@@ -1,4 +1,5 @@
 const START_POS = new BABYLON.Vector3(-10.0, 0.0, -10.0);
+const SCALE_HERO = new BABYLON.Vector3(2.0, 2.0, 2.0);
 const TARGET_POS = new BABYLON.Vector3(31.0, 30.0, 111.0);
 const FAR_CAM_POS = new BABYLON.Vector3(-100.0, 25.0, 200.0);
 const OBJ_POS_1 = new BABYLON.Vector3(-40.0, 10.0, -30.0);

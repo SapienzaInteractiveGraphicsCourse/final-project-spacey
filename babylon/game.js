@@ -215,9 +215,44 @@ let createScene = function () {
         LOADING.subtitle.text = 'loading galaxy: ' + ld + '%'
     });
 
+    BABYLON.Mesh.prototype.ellipsoidMesh = undefined;
+    BABYLON.Mesh.prototype.showEllipsoid = function (scene) {
+
+        if (!this.isEnabled()) return;
+
+        this.refreshBoundingInfo();
+
+        var sphere = BABYLON.MeshBuilder.CreateSphere("elli", {
+            diameterX: this.ellipsoid.x * 2,
+            diameterZ: this.ellipsoid.z * 2,
+            diameterY: this.ellipsoid.y * 2
+        },
+            scene);
+
+        //    sphere.position = this.position.add(this.ellipsoidOffset);
+        sphere.position = this.getAbsolutePosition().add(this.ellipsoidOffset);
+
+        this.ellipsoidMesh = sphere;
+        // sphere.showBoundingBox = true;
+        sphere.material = new BABYLON.StandardMaterial("collider", scene);
+        sphere.material.wireframe = true;
+        sphere.material.diffuseColor = BABYLON.Color3.Yellow();
+
+        // special barrel ellipsoid checks
+        if (this.name == "barrel" || this.name == "barrel2") {
+            sphere.material.diffuseColor = BABYLON.Color3.Green();
+            console.log("barrel.ellipsoid: ", this.ellipsoid)
+            var sbb = sphere.getBoundingInfo().boundingBox;
+            console.log("barrel sphere bb.maximum.scale(2): ", sbb.maximum.scale(2));
+        }
+
+        sphere.visibility = .1;
+    }
+
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", BOY_PATH, scene, function (newMeshes, particleSystems, skeletons) {
         boy = scene.getMeshByName(newMeshes[0].name);
         boy.position = START_POS;
+        boy.scaling = SCALE_HERO;
         shadowGenerator.addShadowCaster(boy);
         shadowGenerator.getShadowMap().renderList.push(boy);
         boy.checkCollisions = true;
@@ -231,6 +266,10 @@ let createScene = function () {
         SPEED_MODULE = SPEED_MODULE * SCALE_FACTOR;
         GRAVITY_ = GRAVITY_ * SCALE_FACTOR;
         //boy.doNotSyncBoundingInfo = true; //uncomment only if not use physics
+        boy.ellipsoidOffset = new BABYLON.Vector3(0, 1.8, 0);
+        boy.ellipsoid = new BABYLON.Vector3(1.25, 2.0, 1.5);
+        //boy.showEllipsoid(scene);
+
         actualBones = {
             "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
             "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
@@ -293,31 +332,48 @@ let createScene = function () {
         let jumping = jumpAnimation(actualBones)
         let standing = standAnimation(actualBones)
 
+        boy.speed = new BABYLON.Vector3(0, 0, 0);
+        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {}, scene); 
+        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+
+        myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+        sphere.material = myMaterial;
+
         /******************* START PHYSIC *****************/
-        BOY = { x0: boy.position.x, y0: boy.position.y, z0: boy.position.z, v0x: 0.0, v0y: 0.0, v0z: 0.0 }
-        var move = false;
+        // BOY = { x0: boy.position.x, y0: boy.position.y, z0: boy.position.z, v0x: 0.0, v0y: 0.0, v0z: 0.0 }
+        // var move = false;
         scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
                     switch (kbInfo.event.key) {
                         case "w":
                         case "W":
+                            flagImp = 1;
+                            activatePhysics = 1;
                             jumping.stop();
                             standing.stop();
                             walking.play(true); //loop
-                            move = true;
-                            moveWithPhysics();
+                            // move = true;
+                            // moveWithPhysics();
                             updateRadar();
+                            break
+                        case "s":
+                        case "S":
+                            flagImp = 0;
+                            walking.stop();
+                            standing.play();
                             break
                         case "a":
                         case "A":
-                            SPEED_DIR_ANGLE -= BABYLON.Tools.ToRadians(10)
-                            boy.rotation.y = SPEED_DIR_ANGLE
+                            boy.rotate(BABYLON.Axis.Y, -turnboi, BABYLON.Space.WORLD);
+                            SPEED_DIR_ANGLE -= turnboi;
+                            // boy.rotation.y = SPEED_DIR_ANGLE
                             break
                         case "d":
                         case "D":
-                            SPEED_DIR_ANGLE += BABYLON.Tools.ToRadians(10)
-                            boy.rotation.y = SPEED_DIR_ANGLE
+                            boy.rotate(BABYLON.Axis.Y, turnboi, BABYLON.Space.WORLD);
+                            SPEED_DIR_ANGLE += turnboi;
+                            // boy.rotation.y = SPEED_DIR_ANGLE
                             break
                         case " ":
                             jumping.play();
@@ -331,59 +387,120 @@ let createScene = function () {
                             break
                     }
                     break;
-                case BABYLON.KeyboardEventTypes.KEYUP:
-                    move = false;
-                    walking.pause();
-                    jumping.pause();
-                    standing.play(false);
-                    break;
+                // case BABYLON.KeyboardEventTypes.KEYUP:
+                //     move = false;
+                //     walking.pause();
+                //     jumping.pause();
+                //     standing.play(false);
+                //     break;
             }
         });
 
         scene.registerBeforeRender(function () {
-            if (!move && getContactGround()) {
-                TIME = 0;
-                GRAVITY_ = 0;
-                BOY.v0x = 0.0;
-                BOY.v0y = 0.0;
-                BOY.v0z = 0.0;
-                BOY.x0 = boy.position.x
-                BOY.y0 = boy.position.y
-                BOY.z0 = boy.position.z
-            }
+            // if (!move && getContactGround()) {
+            //     TIME = 0;
+            //     GRAVITY_ = 0;
+            //     BOY.v0x = 0.0;
+            //     BOY.v0y = 0.0;
+            //     BOY.v0z = 0.0;
+            //     BOY.x0 = boy.position.x
+            //     BOY.y0 = boy.position.y
+            //     BOY.z0 = boy.position.z
+            // }
 
-            boy.position.x = BOY.x0 + BOY.v0x * TIME;
-            boy.position.y = BOY.y0 + BOY.v0y * TIME + 1 / 2 * GRAVITY_ * Math.pow(TIME, 2);
-            boy.position.z = BOY.z0 + BOY.v0z * TIME;
+            // boy.position.x = BOY.x0 + BOY.v0x * TIME;
+            // boy.position.y = BOY.y0 + BOY.v0y * TIME + 1 / 2 * GRAVITY_ * Math.pow(TIME, 2);
+            // boy.position.z = BOY.z0 + BOY.v0z * TIME;
+            if (activatePhysics) {
+
+                callPhysics();
+
+                boy.moveWithCollisions(boy.speed);
+                boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
+            }
         })
 
-        function moveWithPhysics() {
-            if (getContactGround()) {
-                // if (strideExpired) {
-                TIME = 0;
-                BOY.x0 = boy.position.x;
-                BOY.y0 = boy.position.y;
-                BOY.z0 = boy.position.z;
-                BOY.v0x = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
-                BOY.v0y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
-                BOY.v0z = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
-                GRAVITY_ = GRAVITY * SCALE_FACTOR;
-                //strideExpired = false;
-                var steps = [step, step1, step2];
-                var randStep = steps[Math.floor(Math.random() * steps.length)];
+        // function moveWithPhysics() {
+        //     if (getContactGround()) {
+        //         // if (strideExpired) {
+        //         TIME = 0;
+        //         BOY.x0 = boy.position.x;
+        //         BOY.y0 = boy.position.y;
+        //         BOY.z0 = boy.position.z;
+        //         BOY.v0x = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
+        //         BOY.v0y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
+        //         BOY.v0z = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
+        //         GRAVITY_ = GRAVITY * SCALE_FACTOR;
+        //         //strideExpired = false;
+        //         var steps = [step, step1, step2];
+        //         var randStep = steps[Math.floor(Math.random() * steps.length)];
 
-                randStep.play()
+        //         randStep.play()
 
-                // } else {
-                //     BOY.x0 = boy.position.x;
-                //     BOY.y0 = boy.position.y;
-                //     BOY.z0 = boy.position.z;
-                //     BOY.v0x = 0.0;
-                //     BOY.v0y = 0.0;
-                //     BOY.v0z = 0.0;
-                //     GRAVITY_ = 0.0;
-                //     strideExpired = true;
-                // }
+        //         // } else {
+        //         //     BOY.x0 = boy.position.x;
+        //         //     BOY.y0 = boy.position.y;
+        //         //     BOY.z0 = boy.position.z;
+        //         //     BOY.v0x = 0.0;
+        //         //     BOY.v0y = 0.0;
+        //         //     BOY.v0z = 0.0;
+        //         //     GRAVITY_ = 0.0;
+        //         //     strideExpired = true;
+        //         // }
+        //     }
+        // }
+        boy.isPickable = false;
+
+        function callPhysics(){
+
+            //Vertical ray
+            var rayY = new BABYLON.Ray();
+            var rayHelperY = new BABYLON.RayHelper(rayY);
+            
+            var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
+
+            var localMeshOriginY = globalToLocal(boy.position, boy);
+            var length = 20;
+            
+            rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+            rayHelperY.show(scene);
+            var hitInfoY = rayY.intersectsMeshes([ground]);
+
+            if(hitInfoY.length){               
+                    sphere.setEnabled(true);
+                    sphere.position.copyFrom(hitInfoY[0].pickedPoint);
+
+                    //console.log("Boy Y", ( boy.position.y));
+                    //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
+                    //var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
+                    //console.log("sy", sy);
+                    //console.log("sm", SPEED_MODULE);
+                    //console.log("gra", GRAVITY_);
+                    //console.log("sa", SPEED_ANGLE);
+                    //console.log("sp", boy.speed);
+                    var t_delta = (scene.getEngine().getDeltaTime()/1000);
+                    if (sy > Y_THRESH) {
+                        // console.log("111")
+                        boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                        boy.speed.y = boy.speed.y + GRAVITY_ * t_delta;
+                        boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                    }
+                    else {
+                        // console.log("222")
+                        if (flagImp) {
+                            // console.log("2-1")
+                            boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                            boy.speed.y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
+                            boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                        }
+                        else {
+                            activatePhysics = 0; 
+                            // console.log("2-2")
+                        }
+                    }
+            }
+            else {
+                sphere.setEnabled(false);
             }
         }
         /******************* END PHYSIC *****************/
@@ -405,13 +522,16 @@ let createScene = function () {
 
 /******************* START PHYSIC *****************/
 
-
-var TIME = 0;
-var BOY;
+//var TIME = 0;
+//var BOY;
 var SPEED_ANGLE = BABYLON.Tools.ToRadians(45.0);
 var SPEED_DIR_ANGLE = BABYLON.Tools.ToRadians(0);
 var SPEED_MODULE = SPEED;
 var GRAVITY_ = GRAVITY;
+var Y_THRESH = 0.3;
+var turnboi = BABYLON.Tools.ToRadians(15);
+var flagImp = 0;
+var activatePhysics = 1;
 
 /******************* END PHYSIC *****************/
 
@@ -429,7 +549,7 @@ engine.runRenderLoop(function () {
             showGUI();
         }
         scene.render();
-        TIME += scene.getEngine().getDeltaTime() / 1000;
+        // TIME += scene.getEngine().getDeltaTime() / 1000;
     } else if (LOADING.scene.isReady()) {
         LOADING.scene.render();
     }
@@ -437,7 +557,7 @@ engine.runRenderLoop(function () {
 
 /******************* START PHYSIC *****************/
 
-var strideExpired = false;
+// var strideExpired = false;
 
 function globalToLocal(vector, mesh) {
     var m = new BABYLON.Matrix();
@@ -446,21 +566,21 @@ function globalToLocal(vector, mesh) {
     return v;
 }
 
-function getContactGround() {
-    var rayY = new BABYLON.Ray();
-    var rayHelperY = new BABYLON.RayHelper(rayY);
-    var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
-    var localMeshOriginY = globalToLocal(boy.position, boy);
-    var length = 50;
-    rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
-    var hitInfoY = rayY.intersectsMeshes([ground]);
-    var offset = 0.2
-    if (hitInfoY.length) {
-        var sy = boy.height / 2 - offset + boy.position.subtract(hitInfoY[0].pickedPoint).length();
-        if (sy > boy.height / 2) return false;
-        else return true;
-    } else return true;
-}
+// function getContactGround() {
+//     var rayY = new BABYLON.Ray();
+//     var rayHelperY = new BABYLON.RayHelper(rayY);
+//     var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
+//     var localMeshOriginY = globalToLocal(boy.position, boy);
+//     var length = 50;
+//     rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+//     var hitInfoY = rayY.intersectsMeshes([ground]);
+//     var offset = 0.2
+//     if (hitInfoY.length) {
+//         var sy = boy.height / 2 - offset + boy.position.subtract(hitInfoY[0].pickedPoint).length();
+//         if (sy > boy.height / 2) return false;
+//         else return true;
+//     } else return true;
+// }
 
 /******************* END PHYSIC *****************/
 
