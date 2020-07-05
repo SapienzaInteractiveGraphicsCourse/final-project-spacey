@@ -142,6 +142,47 @@ let createScene = function () {
         earth.freezeWorldMatrix();
         earth.doNotSyncBoundingInfo = true;
         earth.convertToUnIndexedMesh();
+
+        //Oxygen cylinder
+        var createHemisphere = function (segments, diameter, light) {
+            var sphere = BABYLON.MeshBuilder.CreateSphere("spotReflector", {slice: 0.5,diameter: diameter, segments: segments}, scene)
+            var disc = BABYLON.Mesh.CreateDisc("disc", diameter/2, (segments*3)+(4-segments), scene);
+            disc.rotation.x = -Math.PI/2
+            disc.parent = sphere;
+            if(light == "hemisphereLight") {
+                sphere.position.y = -0.15;
+            } 
+            return sphere;
+        }
+
+        var oxy_cylinder = BABYLON.MeshBuilder.CreateCylinder("oxy_cylinder", {diameterTop:0.5,diameterBottom:0.5, height: 1, tessellation: 96}, scene);
+
+        var hemisphere_B = createHemisphere(100, 0.5, scene);
+        hemisphere_B.position = new BABYLON.Vector3(0,-0.5,0);
+        hemisphere_B.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.WORLD);
+        hemisphere_B.parent = oxy_cylinder;
+
+        var hemisphere_T = createHemisphere(100, 0.5, scene);
+        hemisphere_T.position = new BABYLON.Vector3(0,0.5,0);
+        hemisphere_T.parent = oxy_cylinder;
+
+        var cylinder2 = BABYLON.MeshBuilder.CreateCylinder("cylinder2", {diameterTop:0.1,diameterBottom:0.1, height: 0.2, tessellation: 96}, scene);
+        cylinder2.position = new BABYLON.Vector3(0,0.8,0);
+        cylinder2.parent = oxy_cylinder;
+
+        var box = BABYLON.MeshBuilder.CreateBox("box", {height: 0.05,width:0.25,depth:0.1}, scene);
+        box.position = new BABYLON.Vector3(0,0.9,0);
+        box.parent = oxy_cylinder;
+
+        oxy_cylinder.position = OXYGEN_POS;
+        oxy_cylinder.rotate(BABYLON.Axis.Z, -Math.PI/2, BABYLON.Space.WORLD);
+        oxy_cylinder.rotate(BABYLON.Axis.Y, Math.PI/4, BABYLON.Space.WORLD);
+        //oxy_cylinder.scaling = new BABYLON.Vector3(3, 3, 3)
+        shadowGenerator.addShadowCaster(oxy_cylinder);
+        shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
+        oxy_cylinder.receiveShadows = true;
+        oxy_cylinder.checkCollisions = true;
+        oxy_cylinder.applyGravity = true;
     }
 
 
@@ -411,6 +452,8 @@ let createScene = function () {
         /******************* START PHYSIC *****************/
         // BOY = { x0: boy.position.x, y0: boy.position.y, z0: boy.position.z, v0x: 0.0, v0y: 0.0, v0z: 0.0 }
         // var move = false;
+        var hl1 = new BABYLON.HighlightLayer("hl1", scene);
+        var hl2 = new BABYLON.HighlightLayer("hl2", scene);
         scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
