@@ -7,12 +7,11 @@ const OBJ_POS_1 = new BABYLON.Vector3(-40.0, 10.0, -30.0);
 const OXYGEN_POS = new BABYLON.Vector3(-10.0, 7.2, -12.0); //y=-5.8 for mesh ground
 const SPEED = 1.5; //m/s
 const GRAVITY = -1.62; // m/s^2
-
-const TXT_TASK = "MISSION 1: Tranquility Base, your partner needs you, oxygen is running out!";
-
-const TASK_SOUND = "mission1.wav"
-const BACK_SOUND = "mission1_back.wav"
-const TXT_GOAL = "";
+const TXT_TASK = "MISSION 1: Your partner needs you. Take an oxigen tank and save his life!";
+const TASK_SOUND = "task1.wav"
+const GOAL_SOUND = "success1.wav"
+const BACK_SOUND = "back1.wav"
+const TXT_GOAL = "MISSION 1: Completed!";
 const SKY_PATH = "../images/galaxy.jpg";
 const MAP_PATH = "moon_new.babylon";
 const MAP_TEXT = "moon_text.jpg"

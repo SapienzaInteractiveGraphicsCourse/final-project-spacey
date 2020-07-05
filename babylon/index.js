@@ -6,7 +6,7 @@ var text2;
 var text3;
 var optimizer;
 let boy;
-const SOUND_ENABLED = 'sound_enabled_label'
+var click;
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
@@ -61,6 +61,13 @@ let createScene = function () {
     sunMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
     sun.material = sunMaterial;
     sunLight.intensity = 15;
+
+
+    click = new BABYLON.Sound("click", "../sounds/click.mp3", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 1
+    });
 
     // Planets Objects
     var planets = [];
@@ -263,6 +270,7 @@ let createScene = function () {
     buttonC.cornerRadius = 20;
     buttonC.thickness = 0;
     buttonC.onPointerUpObservable.add(function () {
+        click.play()
         openCommandDialog();
     });
     panel.addControl(buttonC);
@@ -275,6 +283,7 @@ let createScene = function () {
     buttonS.cornerRadius = 20;
     buttonS.thickness = 0;
     buttonS.onPointerUpObservable.add(function () {
+        click.play()
         window.location.href = "mission1.html";
     });
     panel.addControl(buttonS);
@@ -390,7 +399,7 @@ scene.executeWhenReady(function () {
     var music = new BABYLON.Sound("back", "../sounds/home.wav", scene, null, {
         loop: true,
         autoplay: true,
-        volume: 0.1
+        volume: 0.25
     });
 })
 window.addEventListener('resize', function () {
@@ -419,10 +428,12 @@ function addLabel(mesh) {
 
     if (mesh.name == 'moon') {
         rect1.onPointerUpObservable.addOnce(function () {
+            click.play()
             window.location.href = "mission1.html";
         });
     } else if (mesh.name == 'mars') {
         rect1.onPointerUpObservable.addOnce(function () {
+            click.play()
             window.location.href = "mission2.html";
         });
     } else {
@@ -532,6 +543,7 @@ function openCommandDialog() {
     buttonS.fontSize = 20;
     buttonS.cornerRadius = 20;
     buttonS.onPointerUpObservable.add(function () {
+        click.play()
         messageContainer.dispose()
     });
     panel.addControl(buttonS);
