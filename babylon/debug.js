@@ -351,8 +351,12 @@ let createScene = function () {
         // shadowGenerator.getShadowMap().renderList.push(target);
         // target.receiveShadows = true;
         target.checkCollisions = true;
+        target.applyGravity = true;
         target.material.freeze();
         target.freezeWorldMatrix();
+        target.ellipsoidOffset = new BABYLON.Vector3(0, 1.5, 0);
+        target.ellipsoid = new BABYLON.Vector3(1.25, 1.5, 1.5);
+        // target.showEllipsoid(scene);
 
         //glowing hoop around target
         hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", {diameter: 8, thickness: 0.1, tessellation: 64}, scene);
@@ -366,7 +370,7 @@ let createScene = function () {
         
         let struggling = struggleAnimation(actualBonesTarget,bonesOffsetTarget)
         let aliveing = aliveAnimation(actualBonesTarget,bonesOffsetTarget)
-        
+
         struggling.play(true);
 
         var wantAnimate = 1;
@@ -545,6 +549,18 @@ let createScene = function () {
             }
         });
 
+        // var textPlaneTexture = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
+        // textPlaneTexture.hasAlpha = true;
+
+        // var textPlane = BABYLON.Mesh.CreatePlane("textPlane", 5, scene, false);
+        // textPlane.billboardMode = BABYLON.AbstractMesh.BILLBOARDMODE_ALL;
+        // textPlane.material = new BABYLON.StandardMaterial("textPlane", scene);
+        // textPlane.position = new BABYLON.Vector3(0, 0, 0);
+        // textPlane.material.diffuseTexture = textPlaneTexture;
+        // textPlane.material.specularColor = new BABYLON.Color3(0, 0, 0);
+        // textPlane.material.emissiveColor = new BABYLON.Color3(1, 1, 1);
+        // textPlane.material.backFaceCulling = false;
+
         scene.registerBeforeRender(function () {
         //     if (!move && getContactGround()) {
         //         TIME = 0;
@@ -587,6 +603,11 @@ let createScene = function () {
                         var hlTarget_2 = new BABYLON.HighlightLayer("hlTarget_2", scene);
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
                         hlTarget_1.removeMesh(oxy_cylinder);
+
+                        // textPlane.position.x = target.position.x;
+                        // textPlane.position.y = target.position.y + 3;
+                        // textPlane.position.z = target.position.z;
+                        // textPlaneTexture.drawText("Congrats!!", null, 150, "bold 200px verdana", "orange", "transparent");
 
                         MISSION_STATUS = 1;
                     }

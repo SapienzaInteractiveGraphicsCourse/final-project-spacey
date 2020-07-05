@@ -150,32 +150,45 @@ let createScene = function () {
 
         var oxy_cylinder = BABYLON.MeshBuilder.CreateCylinder("oxy_cylinder", {diameterTop:0.5,diameterBottom:0.5, height: 1, tessellation: 96}, scene);
 
+        var cylinder2 = BABYLON.MeshBuilder.CreateCylinder("cylinder2", {diameterTop:0.1,diameterBottom:0.1, height: 0.2, tessellation: 96}, scene);
+        cylinder2.position = new BABYLON.Vector3(0,0.8,0);
+        cylinder2.parent = oxy_cylinder;
+        var cylMaterial = new BABYLON.StandardMaterial("cylMaterial", scene);
+        cylMaterial.diffuseTexture = new BABYLON.Texture("../images/oxy_2.jpg", scene);
+        cylinder2.material = cylMaterial;
+
         var hemisphere_B = createHemisphere(100, 0.5, scene);
         hemisphere_B.position = new BABYLON.Vector3(0,-0.5,0);
         hemisphere_B.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.WORLD);
         hemisphere_B.parent = oxy_cylinder;
+        hemisphere_B.material = cylMaterial;
 
         var hemisphere_T = createHemisphere(100, 0.5, scene);
         hemisphere_T.position = new BABYLON.Vector3(0,0.5,0);
         hemisphere_T.parent = oxy_cylinder;
-
-        var cylinder2 = BABYLON.MeshBuilder.CreateCylinder("cylinder2", {diameterTop:0.1,diameterBottom:0.1, height: 0.2, tessellation: 96}, scene);
-        cylinder2.position = new BABYLON.Vector3(0,0.8,0);
-        cylinder2.parent = oxy_cylinder;
+        hemisphere_T.material = cylMaterial;
 
         var box = BABYLON.MeshBuilder.CreateBox("box", {height: 0.05,width:0.25,depth:0.1}, scene);
         box.position = new BABYLON.Vector3(0,0.9,0);
         box.parent = oxy_cylinder;
+        var boxMaterial = new BABYLON.StandardMaterial("boxMaterial", scene);
+        boxMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+        box.material = boxMaterial;
+
 
         oxy_cylinder.position = OXYGEN_POS;
         oxy_cylinder.rotate(BABYLON.Axis.Z, -Math.PI/2, BABYLON.Space.WORLD);
         oxy_cylinder.rotate(BABYLON.Axis.Y, Math.PI/4, BABYLON.Space.WORLD);
         //oxy_cylinder.scaling = new BABYLON.Vector3(3, 3, 3)
-        shadowGenerator.addShadowCaster(oxy_cylinder);
-        shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
-        oxy_cylinder.receiveShadows = true;
+        // shadowGenerator.addShadowCaster(oxy_cylinder);
+        // shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
+        // oxy_cylinder.receiveShadows = true;
         oxy_cylinder.checkCollisions = true;
         oxy_cylinder.applyGravity = true;
+        var oxyMaterial = new BABYLON.StandardMaterial("oxyMaterial", scene);
+
+        oxyMaterial.diffuseTexture = new BABYLON.Texture("../images/oxy_1.jpg", scene);
+        oxy_cylinder.material = oxyMaterial;
     }
 
 
@@ -200,7 +213,7 @@ let createScene = function () {
     var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
     var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/" + MINI_MAP_PATH, widthGround, heightGround, widthGround, 0, 10, scene, false, function () {
-        ground.optimize(128);
+        //ground.optimize(128);
     });
     groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
     ground.material = groundMat;
@@ -292,6 +305,20 @@ let createScene = function () {
                     "id": actualBones[key].id
                 };
             }
+            target.ellipsoidOffset = new BABYLON.Vector3(0, 1.5, 0);
+            target.ellipsoid = new BABYLON.Vector3(1.25, 1.5, 1.5);
+            // target.showEllipsoid(scene);
+
+            //glowing hoop around target
+            hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", {diameter: 8, thickness: 0.1, tessellation: 64}, scene);
+            hoopTarget.position = target.position;
+            var hoopMaterial = new BABYLON.StandardMaterial("hoopMaterial", scene);
+            hoopMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            hoopTarget.material = hoopMaterial;
+
+            hlTarget_1 = new BABYLON.HighlightLayer("hlTarget_1", scene);
+            hlTarget_1.addMesh(hoopTarget, BABYLON.Color3.Red());
+
             let struggle = struggleAnimation(actualBones, bonesOffset);
             struggle.play(true);
         } else {
@@ -435,18 +462,14 @@ let createScene = function () {
         myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
         sphere.material = myMaterial;
 
-        boy.speed = new BABYLON.Vector3(0, 0, 0);
-        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {}, scene);
-        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
-
-        myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
-        sphere.material = myMaterial;
-
         /******************* START PHYSIC *****************/
         // BOY = { x0: boy.position.x, y0: boy.position.y, z0: boy.position.z, v0x: 0.0, v0y: 0.0, v0z: 0.0 }
         // var move = false;
         var hl1 = new BABYLON.HighlightLayer("hl1", scene);
         var hl2 = new BABYLON.HighlightLayer("hl2", scene);
+        var flagQ = 0;
+        var flagE = 0;
+        var flagGb = 0;
         scene.onKeyboardObservable.add((kbInfo) => {
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
@@ -548,7 +571,116 @@ let createScene = function () {
                 boy.moveWithCollisions(boy.speed);
                 //boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
             }
-        })
+            if (MOON && !MISSION_STATUS) {
+                //console.log("Dist", boy.position.subtract(oxy_cylinder.position).length());
+                //console.log("FGB", flagGb);
+                if (flagGb) {
+                    flagQ = 0;
+                    hl2.addMesh(oxy_cylinder, BABYLON.Color3.Green());
+
+                    if (boy.position.subtract(target.position).length() < 4) {
+                        flagImp = 0;
+                        walking.stop();
+                        standing.play();
+                        var target_local = Math.atan2(target.position.z,target.position.x);
+                        oxy_cylinder.position.x = target.position.x + Math.sin(target_local);
+                        oxy_cylinder.position.y = target.position.y + 2;
+                        oxy_cylinder.position.z = target.position.z + Math.cos(target_local);
+
+                        var hlTarget_2 = new BABYLON.HighlightLayer("hlTarget_2", scene);
+                        hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
+                        hlTarget_1.removeMesh(oxy_cylinder);
+
+                        // textPlane.position.x = target.position.x;
+                        // textPlane.position.y = target.position.y + 3;
+                        // textPlane.position.z = target.position.z;
+                        // textPlaneTexture.drawText("Congrats!!", null, 150, "bold 200px verdana", "orange", "transparent");
+
+                        MISSION_STATUS = 1;
+                    }
+                    else {
+
+                        oxy_cylinder.position.x = boy.position.x - Math.sin(SPEED_DIR_ANGLE);
+                        oxy_cylinder.position.y = boy.position.y + 2;
+                        oxy_cylinder.position.z = boy.position.z - Math.cos(SPEED_DIR_ANGLE);
+
+                        if (flagE) {
+                            flagE = 0;
+                            flagGb = 0;
+                            flagImp = 0;
+                            walking.stop();
+                            standing.play();
+                            oxy_cylinder.position.x = boy.position.x - 3; //To throw away the oxy cylinder
+                            oxy_cylinder.position.y = boy.position.y;
+                            oxy_cylinder.position.z = boy.position.z;
+                            oxy_cylinder.rotation = new BABYLON.Vector3(0, Math.PI/4, -Math.PI/2);
+                            oxy_cylinder.checkCollisions = true;
+                        }
+                    }
+                }
+
+                else {
+                    flagE = 0;
+                    if ( (boy.position.subtract(oxy_cylinder.position).length()) <5 ) {
+                        //console.log("Glow")
+                        hl1.addMesh(oxy_cylinder, BABYLON.Color3.Red());
+                        hl2.removeMesh(oxy_cylinder); //For !flagGb
+                        // oxy_cylinder.position.y = 1; //For !flagGb
+                        if(flagQ) {
+                            flagImp = 0;
+                            grab() 
+                            oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
+                            oxy_cylinder.checkCollisions = false; //So that Hero does not collide with it while carrying          
+                            flagQ = 0;
+                        }
+                    }
+                    else{
+                        flagQ = 0; //to keep q|Q deactivated untill oxy cylinder glows
+                        hl1.removeMesh(oxy_cylinder);
+                    }
+                }
+
+                // if ( (boy.position.subtract(oxy_cylinder.position).length()) <5 && !flagGb ) {
+                //     //console.log("Glow")
+                //     flagE = 0;
+                //     hl1.addMesh(oxy_cylinder, BABYLON.Color3.Red());
+                //     hl2.removeMesh(oxy_cylinder); //For !flagGb
+                //     // oxy_cylinder.position.y = 1; //For !flagGb
+                //     if (flagQ) {
+                //         flagImp = 0;
+                //         grab() 
+                //         oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
+                //         oxy_cylinder.checkCollisions = false; //So that Hero does not collide with it while carrying          
+                //         flagQ = 0;
+                //     }
+                // }
+                // else{
+                //     flagE = 0;
+                //     flagQ = 0; //to keep q|Q deactivated untill oxy cylinder glows
+                //     hl1.removeMesh(oxy_cylinder);
+                // }
+
+            }
+        });
+
+        var grab = function() {
+            // boy.nextspeed.x = 0; 
+            // boy.nextspeed.z = 0;
+            // boy.speed = BABYLON.Vector3.Lerp(boy.speed, boy.nextspeed, 1);
+            walking.stop();
+            standing.play();
+            grabbing.play();
+            // var hero_new_angle = Math.atan2(oxy_cylinder.position.x,oxy_cylinder.position.z);
+            // console.log("New angle", hero_new_angle)
+            // console.log("Oxy rot", oxy_cylinder.rotation)
+            // console.log("Speed angle", SPEED_DIR_ANGLE)
+            // console.log("boy rot", boy.rotation)
+            setTimeout(function(){
+                // standAnimation(actualBones).play(true);
+                flagGb = 1;
+                hl1.removeMesh(oxy_cylinder);
+            }, 2000);
+        }
 
         // function moveWithPhysics() {
         //     if (getContactGround()) {
@@ -607,7 +739,7 @@ let createScene = function () {
                 //console.log("sm", SPEED_MODULE);
                 //console.log("gra", GRAVITY_);
                 //console.log("sa", SPEED_ANGLE);
-                //console.log("sp", boy.speed);
+                console.log("sp", boy.speed);
                 var t_delta = (scene.getEngine().getDeltaTime() / 1000);
                 if (sy > Y_THRESH) {
                     // console.log("111")
@@ -662,6 +794,7 @@ var Y_THRESH = 0.3;
 var turnboi = BABYLON.Tools.ToRadians(15);
 var flagImp = 0;
 var activatePhysics = 1;
+var MISSION_STATUS = 0;
 
 /******************* END PHYSIC *****************/
 

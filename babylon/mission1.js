@@ -1,11 +1,11 @@
-const START_POS = new BABYLON.Vector3(-10.0, 0.0, -10.0);
+const START_POS = new BABYLON.Vector3(-10.0, 8.0, -10.0); //y=0 for mesh ground
 const SCALE_HERO = new BABYLON.Vector3(2.0, 2.0, 2.0);
-const TARGET_POS = new BABYLON.Vector3(-10.0, -5.0, -20.0); //OBJ_PATH_2 POS actually
+const TARGET_POS = new BABYLON.Vector3(-10.0, 7.2, -25.0); //y=-5.8 for mesh ground
 const FAR_CAM_POS = new BABYLON.Vector3(-100.0, 25.0, 200.0);
 const OBJ_POS_1 = new BABYLON.Vector3(-40.0, 10.0, -30.0);
 // const OXYGEN_POS = new BABYLON.Vector3(-35.0, -6.5, -50.0);
-const OXYGEN_POS = new BABYLON.Vector3(-10.0, -5.0, -12.0);
-const SPEED = 0.81; //m/s
+const OXYGEN_POS = new BABYLON.Vector3(-10.0, 7.2, -12.0); //y=-5.8 for mesh ground
+const SPEED = 1.5; //m/s
 const GRAVITY = -1.62; // m/s^2
 
 const TXT_TASK = "MISSION 1: Tranquility Base, your partner needs you, oxygen is running out!";
