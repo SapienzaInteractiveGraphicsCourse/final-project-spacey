@@ -463,22 +463,6 @@ let createScene = function () {
                             jumping.stop();
                             standing.stop();
                             struggle.stop();
-                            repair.stop();
-                            break;
-                        case "q":
-                        case "Q":
-                            walking.stop();
-                            jumping.stop();
-                            standing.stop();
-                            repair.stop();
-                            struggle.play(true);
-                            break;
-                        case "e":
-                        case "E":
-                            walking.stop();
-                            jumping.stop();
-                            standing.stop();
-                            struggle.stop();
                             repair.play(true);
                             break;
                         default:
