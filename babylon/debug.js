@@ -365,8 +365,18 @@ let createScene = function () {
         hlTarget_1.addMesh(hoopTarget, BABYLON.Color3.Red());
         
         let struggling = struggleAnimation(actualBonesTarget,bonesOffsetTarget)
+        let aliveing = aliveAnimation(actualBonesTarget,bonesOffsetTarget)
         
         struggling.play(true);
+
+        var wantAnimate = 1;
+        scene.registerBeforeRender(function () {
+            if (MISSION_STATUS && wantAnimate) {
+                struggling.stop();
+                aliveing.play();
+                wantAnimate = 0;
+            }
+        });
         
     }//, function (loading) {
     //     var ld = Math.floor(loading.loaded / loading.total * 100.0)
@@ -2059,6 +2069,223 @@ function struggleAnimation(parts, bonesOffset) {
     return struggleGroup;
 }
 
+function aliveAnimation(parts, bonesOffset) {
+    let aliveGroup = new BABYLON.AnimationGroup("alive");
+    let root = new BABYLON.Animation("root", "position", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let trunk = new BABYLON.Animation("trunk", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftUpperArm = new BABYLON.Animation("upperArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftLowerArm = new BABYLON.Animation("lowerArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftHand = new BABYLON.Animation("hand.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightUpperArm = new BABYLON.Animation("upperArm.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightLowerArm = new BABYLON.Animation("lowerArm.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightHand = new BABYLON.Animation("hand.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftUpperLeg = new BABYLON.Animation("upperLeg.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftLowerLeg = new BABYLON.Animation("lowerLeg.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftUpperFoot = new BABYLON.Animation("upperFoot.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let leftLowerFoot = new BABYLON.Animation("lowerFoot.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightUpperLeg = new BABYLON.Animation("upperLeg.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightLowerLeg = new BABYLON.Animation("lowerLeg.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightUpperFoot = new BABYLON.Animation("upperFoot.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let rightLowerFoot = new BABYLON.Animation("lowerFoot.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let head = new BABYLON.Animation("head", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+    let rootKeys = [];
+    let trunkKeys = [];
+    let leftUpperArmKeys = [];
+    let leftLowerArmKeys = [];
+    let leftHandKeys = [];
+    let rightUpperArmKeys = [];
+    let rightLowerArmKeys = [];
+    let rightHandKeys = [];
+    let leftUpperLegKeys = [];
+    let leftLowerLegKeys = [];
+    let leftUpperFootKeys = [];
+    let leftLowerFootKeys = [];
+    let rightUpperLegKeys = [];
+    let rightLowerLegKeys = [];
+    let rightUpperFootKeys = [];
+    let rightLowerFootKeys = [];
+    let headKeys = [];
+
+
+    // root keys
+    {
+        let x = bonesOffset["root"].position.x;
+        let y = bonesOffset["root"].position.y;
+        let z = bonesOffset["root"].position.z;
+        rootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y - 0.5, z) });
+        rootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y - 0.5, z) });
+        root.setKeys(rootKeys);
+    }
+    // trunk keys
+    {
+        let x = bonesOffset["trunk"].rotation.x;
+        let y = bonesOffset["trunk"].rotation.y;
+        let z = bonesOffset["trunk"].rotation.z;
+        trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(4), y, z) });
+        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
+        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(4), y, z) });
+        trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        trunk.setKeys(trunkKeys);
+    }
+    // leftUpperArm keys
+    {
+        let x = bonesOffset["leftUpperArm"].rotation.x;
+        let y = bonesOffset["leftUpperArm"].rotation.y;
+        let z = bonesOffset["leftUpperArm"].rotation.z;
+        leftUpperArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperArm.setKeys(leftUpperArmKeys);
+    }
+    // leftLowerArm keys
+    {
+        let x = bonesOffset["leftLowerArm"].rotation.x;
+        let y = bonesOffset["leftLowerArm"].rotation.y;
+        let z = bonesOffset["leftLowerArm"].rotation.z;
+        leftLowerArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-25), y + BABYLON.Tools.ToRadians(-25), z + BABYLON.Tools.ToRadians(-95)) });
+        leftLowerArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerArm.setKeys(leftLowerArmKeys);
+    }
+    // leftHand keys
+    {
+        let x = bonesOffset["leftHand"].rotation.x;
+        let y = bonesOffset["leftHand"].rotation.y;
+        let z = bonesOffset["leftHand"].rotation.z;
+        leftHandKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftHandKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftHand.setKeys(leftHandKeys);
+    }
+    // rightUpperArm keys
+    {
+        let x = bonesOffset["rightUpperArm"].rotation.x;
+        let y = bonesOffset["rightUpperArm"].rotation.y;
+        let z = bonesOffset["rightUpperArm"].rotation.z;
+        rightUpperArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperArm.setKeys(rightUpperArmKeys);
+    }
+    // rightLowerArm keys
+    {
+        let x = bonesOffset["rightLowerArm"].rotation.x;
+        let y = bonesOffset["rightLowerArm"].rotation.y;
+        let z = bonesOffset["rightLowerArm"].rotation.z;
+        rightLowerArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(25), y + BABYLON.Tools.ToRadians(25), z + BABYLON.Tools.ToRadians(95)) });
+        rightLowerArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerArm.setKeys(rightLowerArmKeys);
+    }
+    // rightHand keys
+    {
+        let x = bonesOffset["rightHand"].rotation.x;
+        let y = bonesOffset["rightHand"].rotation.y;
+        let z = bonesOffset["rightHand"].rotation.z;
+        rightHandKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightHandKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightHand.setKeys(rightHandKeys);
+    }
+    // leftUpperLeg keys
+    {
+        let x = bonesOffset["leftUpperLeg"].rotation.x;
+        let y = bonesOffset["leftUpperLeg"].rotation.y;
+        let z = bonesOffset["leftUpperLeg"].rotation.z;
+        leftUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(90), y, z) });
+        leftUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(90), y, z) });
+        leftUpperLeg.setKeys(leftUpperLegKeys);
+    }
+    // leftLowerLeg keys
+    {
+        let x = bonesOffset["leftLowerLeg"].rotation.x;
+        let y = bonesOffset["leftLowerLeg"].rotation.y;
+        let z = bonesOffset["leftLowerLeg"].rotation.z;
+        leftLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(90), y, z) });
+        leftLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(90), y, z) });
+        leftLowerLeg.setKeys(leftLowerLegKeys);
+    }
+    // leftUpperFoot keys
+    {
+        let x = bonesOffset["leftUpperFoot"].rotation.x;
+        let y = bonesOffset["leftUpperFoot"].rotation.y;
+        let z = bonesOffset["leftUpperFoot"].rotation.z;
+        leftUpperFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperFoot.setKeys(leftUpperFootKeys);
+    }
+    // leftLowerFoot keys
+    {
+        let x = bonesOffset["leftLowerFoot"].rotation.x;
+        let y = bonesOffset["leftLowerFoot"].rotation.y;
+        let z = bonesOffset["leftLowerFoot"].rotation.z;
+        leftLowerFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerFoot.setKeys(leftLowerFootKeys);
+    }
+    // rightUpperLeg keys
+    {
+        let x = bonesOffset["rightUpperLeg"].rotation.x;
+        let y = bonesOffset["rightUpperLeg"].rotation.y;
+        let z = bonesOffset["rightUpperLeg"].rotation.z;
+        rightUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperLeg.setKeys(rightUpperLegKeys);
+    }
+    // rightLowerLeg keys
+    {
+        let x = bonesOffset["rightLowerLeg"].rotation.x;
+        let y = bonesOffset["rightLowerLeg"].rotation.y;
+        let z = bonesOffset["rightLowerLeg"].rotation.z;
+        rightLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(105), y, z) });
+        rightLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(105), y, z) });
+        rightLowerLeg.setKeys(rightLowerLegKeys);
+    }
+    // rightUpperFoot keys
+    {
+        let x = bonesOffset["rightUpperFoot"].rotation.x;
+        let y = bonesOffset["rightUpperFoot"].rotation.y;
+        let z = bonesOffset["rightUpperFoot"].rotation.z;
+        rightUpperFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperFoot.setKeys(rightUpperFootKeys);
+    }
+    // rightLowerFoot keys
+    {
+        let x = bonesOffset["rightLowerFoot"].rotation.x;
+        let y = bonesOffset["rightLowerFoot"].rotation.y;
+        let z = bonesOffset["rightLowerFoot"].rotation.z;
+        rightLowerFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerFoot.setKeys(rightLowerFootKeys);
+    }
+    // head keys
+    {
+        let x = bonesOffset["head"].rotation.x;
+        let y = bonesOffset["head"].rotation.y;
+        let z = bonesOffset["head"].rotation.z;
+        headKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        headKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        head.setKeys(headKeys);
+    }
+
+    aliveGroup.addTargetedAnimation(root, parts["root"]);
+    aliveGroup.addTargetedAnimation(trunk, parts["trunk"]);
+    aliveGroup.addTargetedAnimation(leftUpperArm, parts["leftUpperArm"]);
+    aliveGroup.addTargetedAnimation(leftLowerArm, parts["leftLowerArm"]);
+    aliveGroup.addTargetedAnimation(leftHand, parts["leftHand"]);
+    aliveGroup.addTargetedAnimation(rightUpperArm, parts["rightUpperArm"]);
+    aliveGroup.addTargetedAnimation(rightLowerArm, parts["rightLowerArm"]);
+    aliveGroup.addTargetedAnimation(rightHand, parts["rightHand"]);
+    aliveGroup.addTargetedAnimation(leftUpperLeg, parts["leftUpperLeg"]);
+    aliveGroup.addTargetedAnimation(leftLowerLeg, parts["leftLowerLeg"]);
+    aliveGroup.addTargetedAnimation(leftUpperFoot, parts["leftUpperFoot"]);
+    aliveGroup.addTargetedAnimation(leftLowerFoot, parts["leftLowerFoot"]);
+    aliveGroup.addTargetedAnimation(rightUpperLeg, parts["rightUpperLeg"]);
+    aliveGroup.addTargetedAnimation(rightLowerLeg, parts["rightLowerLeg"]);
+    aliveGroup.addTargetedAnimation(rightUpperFoot, parts["rightUpperFoot"]);
+    aliveGroup.addTargetedAnimation(rightLowerFoot, parts["rightLowerFoot"]);
+    aliveGroup.addTargetedAnimation(head, parts["head"]);
+    aliveGroup.normalize(0, 80);
+
+    return aliveGroup;
+}
 // function slowZoom() {
 
 //     //for farCamera move forward
