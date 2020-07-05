@@ -23,6 +23,7 @@ let optimizer;
 let nav;
 let target;
 let text2;
+let click;
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
@@ -95,6 +96,12 @@ let createScene = function () {
     dirLight.position = godrays.mesh.position;
     godrays.mesh.freezeWorldMatrix();
     godrays.mesh.doNotSyncBoundingInfo = true;
+
+    click = new BABYLON.Sound("click", "../sounds/click.mp3", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 1
+    });
 
     // Shadows
     let shadowGenerator = new BABYLON.ShadowGenerator(5000, dirLight);
@@ -2045,13 +2052,13 @@ function showGUI() {
     var music = new BABYLON.Sound("beep", "../sounds/" + TASK_SOUND, scene, null, {
         loop: false,
         autoplay: true,
-        volume: 3
+        volume: 0.75
     });
 
     var music2 = new BABYLON.Sound("back", "../sounds/" + BACK_SOUND, scene, null, {
         loop: true,
         autoplay: true,
-        volume: 0.05
+        volume: 0.25
     });
 
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -2152,6 +2159,7 @@ function showGUI() {
             fading(startButton, 40, 0, 1,
                 function () {
                     startButton.onPointerUpObservable.addOnce(function () {
+                        click.play();
                         fading(panel, 40, 1, 0);
                         fading(messageContainer, 40, 1, 0, fastZoom);
                     });
