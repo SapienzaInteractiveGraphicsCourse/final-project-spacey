@@ -1,4 +1,5 @@
 const START_POS = new BABYLON.Vector3(-10.0, 0.0, -10.0);
+const SCALE_HERO = new BABYLON.Vector3(1.0, 1.0, 1.0);
 const TARGET_POS = new BABYLON.Vector3(-60.0, 0.0, -105.0);
 const FAR_CAM_POS = new BABYLON.Vector3(-50.0, 25.0, 100.0);
 const OBJ_POS_1 = new BABYLON.Vector3(3.0, 0.0, 32.0);
@@ -10,6 +11,7 @@ const BACK_SOUND = "mission2_back.wav"
 const TXT_GOAL = "";
 const SKY_PATH = "../images/orange.jpg";
 const MAP_PATH = "mars.babylon";
+const MAP_TEXT = "mars_text.jpg"
 const BOY_PATH = "ACES2.babylon";
 const OBJ_PATH_1 = "nav_mars.babylon";
 const OBJ_PATH_2 = "rover.babylon";
