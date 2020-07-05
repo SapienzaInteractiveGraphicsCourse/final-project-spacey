@@ -23,6 +23,7 @@ let optimizer;
 let nav;
 let target;
 let text2;
+let textEnd;
 let click;
 
 let createScene = function () {
@@ -145,38 +146,38 @@ let createScene = function () {
 
         //Oxygen cylinder
         var createHemisphere = function (segments, diameter, light) {
-            var sphere = BABYLON.MeshBuilder.CreateSphere("spotReflector", {slice: 0.5,diameter: diameter, segments: segments}, scene)
-            var disc = BABYLON.Mesh.CreateDisc("disc", diameter/2, (segments*3)+(4-segments), scene);
-            disc.rotation.x = -Math.PI/2
+            var sphere = BABYLON.MeshBuilder.CreateSphere("spotReflector", { slice: 0.5, diameter: diameter, segments: segments }, scene)
+            var disc = BABYLON.Mesh.CreateDisc("disc", diameter / 2, (segments * 3) + (4 - segments), scene);
+            disc.rotation.x = -Math.PI / 2
             disc.parent = sphere;
-            if(light == "hemisphereLight") {
+            if (light == "hemisphereLight") {
                 sphere.position.y = -0.15;
-            } 
+            }
             return sphere;
         }
 
-        var oxy_cylinder = BABYLON.MeshBuilder.CreateCylinder("oxy_cylinder", {diameterTop:0.5,diameterBottom:0.5, height: 1, tessellation: 96}, scene);
+        var oxy_cylinder = BABYLON.MeshBuilder.CreateCylinder("oxy_cylinder", { diameterTop: 0.5, diameterBottom: 0.5, height: 1, tessellation: 96 }, scene);
 
         var hemisphere_B = createHemisphere(100, 0.5, scene);
-        hemisphere_B.position = new BABYLON.Vector3(0,-0.5,0);
+        hemisphere_B.position = new BABYLON.Vector3(0, -0.5, 0);
         hemisphere_B.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.WORLD);
         hemisphere_B.parent = oxy_cylinder;
 
         var hemisphere_T = createHemisphere(100, 0.5, scene);
-        hemisphere_T.position = new BABYLON.Vector3(0,0.5,0);
+        hemisphere_T.position = new BABYLON.Vector3(0, 0.5, 0);
         hemisphere_T.parent = oxy_cylinder;
 
-        var cylinder2 = BABYLON.MeshBuilder.CreateCylinder("cylinder2", {diameterTop:0.1,diameterBottom:0.1, height: 0.2, tessellation: 96}, scene);
-        cylinder2.position = new BABYLON.Vector3(0,0.8,0);
+        var cylinder2 = BABYLON.MeshBuilder.CreateCylinder("cylinder2", { diameterTop: 0.1, diameterBottom: 0.1, height: 0.2, tessellation: 96 }, scene);
+        cylinder2.position = new BABYLON.Vector3(0, 0.8, 0);
         cylinder2.parent = oxy_cylinder;
 
-        var box = BABYLON.MeshBuilder.CreateBox("box", {height: 0.05,width:0.25,depth:0.1}, scene);
-        box.position = new BABYLON.Vector3(0,0.9,0);
+        var box = BABYLON.MeshBuilder.CreateBox("box", { height: 0.05, width: 0.25, depth: 0.1 }, scene);
+        box.position = new BABYLON.Vector3(0, 0.9, 0);
         box.parent = oxy_cylinder;
 
         oxy_cylinder.position = OXYGEN_POS;
-        oxy_cylinder.rotate(BABYLON.Axis.Z, -Math.PI/2, BABYLON.Space.WORLD);
-        oxy_cylinder.rotate(BABYLON.Axis.Y, Math.PI/4, BABYLON.Space.WORLD);
+        oxy_cylinder.rotate(BABYLON.Axis.Z, -Math.PI / 2, BABYLON.Space.WORLD);
+        oxy_cylinder.rotate(BABYLON.Axis.Y, Math.PI / 4, BABYLON.Space.WORLD);
         //oxy_cylinder.scaling = new BABYLON.Vector3(3, 3, 3)
         shadowGenerator.addShadowCaster(oxy_cylinder);
         shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
@@ -2090,9 +2091,21 @@ function typeWriter(callback) {
     }
 }
 
+function typeWriterEnd(callback) {
+    if (i < TXT_GOAL.length) {
+        textEnd.text += TXT_GOAL.charAt(i);
+        i++;
+        setTimeout(typeWriterEnd, 50);
+    } else if (i >= TXT_GOAL.length) {
+        if (callback && typeof (callback) === "function") {
+            callback();
+        }
+    }
+}
+
 function showGUI() {
 
-    var music = new BABYLON.Sound("beep", "../sounds/" + TASK_SOUND, scene, null, {
+    var music = new BABYLON.Sound("task", "../sounds/" + TASK_SOUND, scene, null, {
         loop: false,
         autoplay: true,
         volume: 0.75
@@ -2211,4 +2224,66 @@ function showGUI() {
         )
     )
     slowZoom();
+}
+
+
+function showEndGUI() {
+
+    scene.onKeyboardObservable.clear();
+
+    var music = new BABYLON.Sound("end", "../sounds/" + GOAL_SOUND, scene, null, {
+        loop: false,
+        autoplay: true,
+        volume: 0.75
+    });
+
+    let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var messageContainer = new BABYLON.GUI.Rectangle();
+    messageContainer.height = 0.3;
+    messageContainer.width = 0.7;
+    messageContainer.cornerRadius = 20;
+    messageContainer.color = "Orange";
+    advancedTexture.addControl(messageContainer);
+
+    var panel = new BABYLON.GUI.StackPanel();
+    messageContainer.addControl(panel);
+
+    textEnd = new BABYLON.GUI.TextBlock();
+    textEnd.height = "80px";
+    textEnd.width = 1;
+    textEnd.color = "Orange";
+    textEnd.fontSize = 24;
+    panel.addControl(textEnd);
+
+    var endButton = BABYLON.GUI.Button.CreateImageWithCenterTextButton("endButton", "NEXT MISSION");
+    endButton.width = 0.35;
+    endButton.height = "40px";
+    endButton.cornerRadius = 20;
+    endButton.color = "Orange";
+    endButton.fontSize = 24;
+    endButton.alpha = 0;
+    panel.addControl(endButton);
+
+    fading(messageContainer, 30, 0, 1,
+        typeWriterEnd(
+            fading(endButton, 40, 0, 1,
+                function () {
+                    endButton.onPointerUpObservable.addOnce(function () {
+                        click.play();
+                        fading(panel, 40, 1, 0,
+                            fading(endButton, 40, 1, 0,
+                                function () {
+                                    if (MOON) {
+                                        window.location.href = "mission2.html";
+                                    } else {
+                                        window.location.href = "index.html";
+                                    }
+                                }
+                            ));
+                    });
+                }
+            )
+        )
+    )
 }
