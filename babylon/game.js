@@ -17,8 +17,8 @@ let pos2;
 let godrays;
 let godrays2;
 let dirLight;
-let widthGround = 700;
-let heightGround = 700;
+let widthGround = 1000;
+let heightGround = 1000;
 let optimizer;
 let nav;
 let target;
@@ -2642,7 +2642,8 @@ function aliveAnimation(parts, bonesOffset) {
     return aliveGroup;
 }
 
-function slowZoom() {
+
+function slowZoomIn() {
 
     //for farCamera move forward
     let movein = new BABYLON.Animation(
