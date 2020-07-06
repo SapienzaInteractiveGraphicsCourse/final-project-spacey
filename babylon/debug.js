@@ -549,17 +549,7 @@ let createScene = function () {
             }
         });
 
-        // var textPlaneTexture = new BABYLON.DynamicTexture("dynamic texture", 512, scene, true);
-        // textPlaneTexture.hasAlpha = true;
 
-        // var textPlane = BABYLON.Mesh.CreatePlane("textPlane", 5, scene, false);
-        // textPlane.billboardMode = BABYLON.AbstractMesh.BILLBOARDMODE_ALL;
-        // textPlane.material = new BABYLON.StandardMaterial("textPlane", scene);
-        // textPlane.position = new BABYLON.Vector3(0, 0, 0);
-        // textPlane.material.diffuseTexture = textPlaneTexture;
-        // textPlane.material.specularColor = new BABYLON.Color3(0, 0, 0);
-        // textPlane.material.emissiveColor = new BABYLON.Color3(1, 1, 1);
-        // textPlane.material.backFaceCulling = false;
 
         scene.registerBeforeRender(function () {
         //     if (!move && getContactGround()) {
@@ -604,10 +594,10 @@ let createScene = function () {
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
                         hlTarget_1.removeMesh(oxy_cylinder);
 
-                        // textPlane.position.x = target.position.x;
-                        // textPlane.position.y = target.position.y + 3;
-                        // textPlane.position.z = target.position.z;
-                        // textPlaneTexture.drawText("Congrats!!", null, 150, "bold 200px verdana", "orange", "transparent");
+                        congratsPlane.position.x = target.position.x;
+                        congratsPlane.position.y = target.position.y + 4;
+                        congratsPlane.position.z = target.position.z;
+                        congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
 
                         MISSION_STATUS = 1;
                     }
@@ -783,7 +773,39 @@ let createScene = function () {
             }
         }
         /******************* END PHYSIC *****************/
+        var font_type = "Arial";//verdana
+        
+        var congratsPlane = BABYLON.MeshBuilder.CreatePlane("congratsPlane", {width:10, height:3}, scene);
+        congratsPlane.rotate(BABYLON.Axis.Y, 7*Math.PI/6, BABYLON.Space.WORLD);
+        var DTWidth = 10 * 60;
+        var DTHeight = 3 * 60;
 
+        // var TXT_FINISH = "Congrats, you saved your partner!!!";
+        
+        var congratsTexture = new BABYLON.DynamicTexture("congratsTexture", {width:DTWidth, height:DTHeight}, scene);
+
+        //Check width of text for given font type at any size of font
+        var ctx = congratsTexture.getContext();
+        var size = 12; //any value will work
+        ctx.font = size + "px " + font_type;
+        var textWidth = ctx.measureText(TXT_FINISH).width;
+        
+        var ratio = textWidth/size;
+        
+        //set font to be actually used to write text on dynamic texture
+        var font_size = Math.floor(DTWidth / (ratio * 1)); //size of multiplier (1) can be adjusted, increase for smaller text
+        var font = font_size + "px " + font_type;
+        
+        //Draw text
+        congratsTexture.drawText("", null, null, font, "#DAA520", "transparent");
+        congratsTexture.hasAlpha = true;
+        
+        var congratsMat = new BABYLON.StandardMaterial("congratsMat", scene);
+        congratsMat.specularColor = new BABYLON.Color3(0, 0, 0);
+        congratsMat.emissiveColor = new BABYLON.Color3(1, 1, 1);
+        congratsMat.diffuseTexture = congratsTexture;
+        
+        congratsPlane.material = congratsMat;
     }//, function (loading) {
         //     var ld = Math.floor(loading.loaded / loading.total * 100.0)
         //     LOADING.subtitle.text = 'landing: ' + ld + '%'

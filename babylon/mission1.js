@@ -1,13 +1,13 @@
-const START_POS = new BABYLON.Vector3(-10.0, 8.0, -10.0); //y=0 for mesh ground
+const START_POS = new BABYLON.Vector3(-10.0, 8.0, -10.0); 
 const SCALE_HERO = new BABYLON.Vector3(2.0, 2.0, 2.0);
-const TARGET_POS = new BABYLON.Vector3(-10.0, 7.2, -25.0); //y=-5.8 for mesh ground
+const TARGET_POS = new BABYLON.Vector3(0.0, 7.2, -50.0); 
 const FAR_CAM_POS = new BABYLON.Vector3(-100.0, 25.0, 200.0);
 const OBJ_POS_1 = new BABYLON.Vector3(-40.0, 10.0, -30.0);
-// const OXYGEN_POS = new BABYLON.Vector3(-35.0, -6.5, -50.0);
-const OXYGEN_POS = new BABYLON.Vector3(-10.0, 7.2, -12.0); //y=-5.8 for mesh ground
-const SPEED = 1.5; //m/s
+const OXYGEN_POS = new BABYLON.Vector3(-10.0, 7.2, -12.0); 
+const SPEED = 0.75; //m/s
 const GRAVITY = -1.62; // m/s^2
-const TXT_TASK = "MISSION 1: Your partner needs you. Take an oxigen tank and save his life!";
+const TXT_TASK = "MISSION 1: Your partner needs you. Take an oxygen tank and save his life!";
+const TXT_FINISH = "Congrats, you saved your partner!!!";
 const TASK_SOUND = "task1.wav"
 const GOAL_SOUND = "success1.wav"
 const BACK_SOUND = "back1.wav"

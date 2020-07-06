@@ -217,22 +217,22 @@ let createScene = function () {
         volume: 0.1
     });
 
-    var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
-    var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/" + MINI_MAP_PATH, widthGround, heightGround, widthGround, 0, 10, scene, false, function () {
-        //ground.optimize(128);
-    });
-    groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
-    ground.material = groundMat;
-    ground.position = new BABYLON.Vector3(0, 0, 0);
-    ground.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
-    ground.scaling = new BABYLON.Vector3(1, 3, 1); // make it bigger
-    shadowGenerator.addShadowCaster(ground);
-    shadowGenerator.getShadowMap().renderList.push(ground);
-    ground.receiveShadows = true;
-    ground.checkCollisions = true;
-    ground.material.freeze();
-    ground.freezeWorldMatrix();
+    // var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+    // groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
+    // var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/" + MINI_MAP_PATH, widthGround, heightGround, widthGround, 0, 10, scene, false, function () {
+    //     ground.optimize(128);
+    // });
+    // groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
+    // ground.material = groundMat;
+    // ground.position = new BABYLON.Vector3(0, 0, 0);
+    // ground.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+    // ground.scaling = new BABYLON.Vector3(1, 3, 1); // make it bigger
+    // shadowGenerator.addShadowCaster(ground);
+    // shadowGenerator.getShadowMap().renderList.push(ground);
+    // ground.receiveShadows = true;
+    // ground.checkCollisions = true;
+    // ground.material.freeze();
+    // ground.freezeWorldMatrix();
 
     // BABYLON.SceneLoader.ImportMesh("Map", "../models/", MAP_PATH, scene, function (newMeshes, particleSystems, skeletons) {
     //     ground = scene.getMeshByName(newMeshes[0].name);
@@ -276,6 +276,7 @@ let createScene = function () {
     BABYLON.SceneLoader.ImportMesh("Target", "../models/", OBJ_PATH_2, scene, function (newMeshes, particleSystems, skeletons) {
         target = scene.getMeshByName(newMeshes[0].name);
         target.position = TARGET_POS;
+        target.scaling = SCALE_HERO;
         if (MOON) {
             var actualBones = {
                 "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
@@ -317,7 +318,7 @@ let createScene = function () {
             // target.showEllipsoid(scene);
 
             //glowing hoop around target
-            hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", {diameter: 8, thickness: 0.1, tessellation: 64}, scene);
+            hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", {diameter: 10, thickness: 0.1, tessellation: 64}, scene);
             hoopTarget.position = target.position;
             var hoopMaterial = new BABYLON.StandardMaterial("hoopMaterial", scene);
             hoopMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
@@ -398,6 +399,23 @@ let createScene = function () {
         boy.ellipsoid = new BABYLON.Vector3(1.25, 2.0, 1.5);
         //boy.showEllipsoid(scene);
 
+        var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+        groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
+        var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/" + MINI_MAP_PATH, widthGround, heightGround, widthGround, 0, 10, scene, false, function () {
+            ground.optimize(128);
+        });
+        groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
+        ground.material = groundMat;
+        ground.position = new BABYLON.Vector3(0, 0, 0);
+        ground.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+        ground.scaling = new BABYLON.Vector3(1, 3, 1); // make it bigger
+        shadowGenerator.addShadowCaster(ground);
+        shadowGenerator.getShadowMap().renderList.push(ground);
+        ground.receiveShadows = true;
+        ground.checkCollisions = true;
+        // ground.material.freeze();
+        // ground.freezeWorldMatrix();
+
         var actualBones = {
             "root": skeletons[0].bones.filter((val) => { return val.id == 'root' })[0],
             "trunk": skeletons[0].bones.filter((val) => { return val.id == 'trunk' })[0],
@@ -459,6 +477,7 @@ let createScene = function () {
         let walking = walkAnimation(actualBones, bonesOffset);
         let jumping = jumpAnimation(actualBones, bonesOffset);
         let standing = standAnimation(actualBones, bonesOffset);
+        let grabbing = grabAnimation(actualBones, bonesOffset);
         let struggle = struggleAnimation(actualBones, bonesOffset);
         let repair = repairAnimation(actualBones, bonesOffset);
 
@@ -524,19 +543,21 @@ let createScene = function () {
                             break;
                         case "q":
                         case "Q":
-                            walking.stop();
-                            jumping.stop();
-                            standing.stop();
-                            repair.stop();
-                            struggle.play(true);
+                            flagQ = 1;
+                            // walking.stop();
+                            // jumping.stop();
+                            // standing.stop();
+                            // repair.stop();
+                            // struggle.play(true);
                             break;
                         case "e":
                         case "E":
-                            walking.stop();
-                            jumping.stop();
-                            standing.stop();
-                            struggle.stop();
-                            repair.play(true);
+                            flagE = 1; 
+                            // walking.stop();
+                            // jumping.stop();
+                            // standing.stop();
+                            // struggle.stop();
+                            // repair.play(true);
                             break;
                         default:
                             walking.stop();
@@ -585,7 +606,7 @@ let createScene = function () {
                     flagQ = 0;
                     hl2.addMesh(oxy_cylinder, BABYLON.Color3.Green());
 
-                    if (boy.position.subtract(target.position).length() < 4) {
+                    if (boy.position.subtract(target.position).length() < 5) {
                         flagImp = 0;
                         walking.stop();
                         standing.play();
@@ -598,10 +619,10 @@ let createScene = function () {
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
                         hlTarget_1.removeMesh(oxy_cylinder);
 
-                        // textPlane.position.x = target.position.x;
-                        // textPlane.position.y = target.position.y + 3;
-                        // textPlane.position.z = target.position.z;
-                        // textPlaneTexture.drawText("Congrats!!", null, 150, "bold 200px verdana", "orange", "transparent");
+                        congratsPlane.position.x = target.position.x;
+                        congratsPlane.position.y = target.position.y + 5;
+                        congratsPlane.position.z = target.position.z;
+                        congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
 
                         MISSION_STATUS = 1;
                     }
@@ -773,6 +794,43 @@ let createScene = function () {
             }
         }
         /******************* END PHYSIC *****************/
+
+        /******************START FINISH TEXT**************/
+        var font_type = "Arial";//verdana
+        
+        var congratsPlane = BABYLON.MeshBuilder.CreatePlane("congratsPlane", {width:10, height:3}, scene);
+        congratsPlane.rotate(BABYLON.Axis.Y, 7*Math.PI/6, BABYLON.Space.WORLD);
+        var DTWidth = 10 * 60;
+        var DTHeight = 3 * 60;
+
+        // var TXT_FINISH = "Congrats, you saved your partner!!!";
+        
+        var congratsTexture = new BABYLON.DynamicTexture("congratsTexture", {width:DTWidth, height:DTHeight}, scene);
+
+        //Check width of text for given font type at any size of font
+        var ctx = congratsTexture.getContext();
+        var size = 12; //any value will work
+        ctx.font = size + "px " + font_type;
+        var textWidth = ctx.measureText(TXT_FINISH).width;
+        
+        var ratio = textWidth/size;
+        
+        //set font to be actually used to write text on dynamic texture
+        var font_size = Math.floor(DTWidth / (ratio * 1)); //size of multiplier (1) can be adjusted, increase for smaller text
+        var font = font_size + "px " + font_type;
+        
+        //Draw text
+        congratsTexture.drawText("", null, null, font, "#DAA520", "transparent");
+        congratsTexture.hasAlpha = true;
+        
+        var congratsMat = new BABYLON.StandardMaterial("congratsMat", scene);
+        congratsMat.specularColor = new BABYLON.Color3(0, 0, 0);
+        congratsMat.emissiveColor = new BABYLON.Color3(1, 1, 1);
+        congratsMat.diffuseTexture = congratsTexture;
+        
+        congratsPlane.material = congratsMat;
+        /******************END FINISH TEXT**************/
+
 
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
@@ -2089,6 +2147,241 @@ function repairAnimation(parts, bonesOffset) {
     repairGroup.normalize(0, 80);
 
     return repairGroup;
+}
+
+function grabAnimation(parts, bonesOffset) {
+    console.log("G called")
+    var grabGroup = new BABYLON.AnimationGroup("Grab");
+    var root = new BABYLON.Animation("root", "position.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var trunk = new BABYLON.Animation("trunk", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftUpperArm = new BABYLON.Animation("upperArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftLowerArm = new BABYLON.Animation("lowerArm.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftHand = new BABYLON.Animation("hand.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightUpperArm = new BABYLON.Animation("upperArm.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightLowerArm = new BABYLON.Animation("lowerArm.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightHand = new BABYLON.Animation("hand.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftUpperLeg = new BABYLON.Animation("upperLeg.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftLowerLeg = new BABYLON.Animation("lowerLeg.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftUpperFoot = new BABYLON.Animation("upperFoot.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var leftLowerFoot = new BABYLON.Animation("lowerFoot.L", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightUpperLeg = new BABYLON.Animation("upperLeg.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightLowerLeg = new BABYLON.Animation("lowerLeg.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightUpperFoot = new BABYLON.Animation("upperFoot.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var rightLowerFoot = new BABYLON.Animation("lowerFoot.R", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    var head = new BABYLON.Animation("head", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+
+    var rootKeys = [];
+    var trunkKeys = [];
+    var leftUpperArmKeys = [];
+    var leftLowerArmKeys = [];
+    var leftHandKeys = [];
+    var rightUpperArmKeys = [];
+    var rightLowerArmKeys = [];
+    var rightHandKeys = [];
+    var leftUpperLegKeys = [];
+    var leftLowerLegKeys = [];
+    var leftUpperFootKeys = [];
+    var leftLowerFootKeys = [];
+    var rightUpperLegKeys = [];
+    var rightLowerLegKeys = [];
+    var rightUpperFootKeys = [];
+    var rightLowerFootKeys = [];
+    var headKeys = [];
+
+    // root currentPosition
+    // root keys
+    {
+        var y = bonesOffset["root"].position.y;
+        rootKeys.push({ frame: 0, value: y });
+        rootKeys.push({ frame: 80, value: y });
+        root.setKeys(rootKeys);
+    }
+    // trunk keys
+    {
+        var x = bonesOffset["trunk"].rotation.x;
+        var y = bonesOffset["trunk"].rotation.y;
+        var z = bonesOffset["trunk"].rotation.z;
+        trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        trunkKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z) });
+        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
+        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(30), y, z) });
+        trunkKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
+        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z) });
+        trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        trunk.setKeys(trunkKeys);
+    }
+    // leftUpperArm keys
+    {
+        var x = bonesOffset["leftUpperArm"].rotation.x;
+        var y = bonesOffset["leftUpperArm"].rotation.y;
+        var z = bonesOffset["leftUpperArm"].rotation.z;
+        leftUpperArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperArm.setKeys(leftUpperArmKeys);
+    }
+    // leftLowerArm keys
+    {
+        var x = bonesOffset["leftLowerArm"].rotation.x;
+        var y = bonesOffset["leftLowerArm"].rotation.y;
+        var z = bonesOffset["leftLowerArm"].rotation.z;
+        leftLowerArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerArmKeys.push({ frame: 10, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-10), z) });
+        leftLowerArmKeys.push({ frame: 20, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-30), z) });
+        leftLowerArmKeys.push({ frame: 30, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-50), z) });
+        leftLowerArmKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-70), z) });
+        leftLowerArmKeys.push({ frame: 50, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-50), z) });
+        leftLowerArmKeys.push({ frame: 60, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-30), z) });
+        leftLowerArmKeys.push({ frame: 70, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(-10), z) });
+        leftLowerArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerArm.setKeys(leftLowerArmKeys);
+    }
+    // leftHand keys
+    {
+        var x = bonesOffset["leftHand"].rotation.x;
+        var y = bonesOffset["leftHand"].rotation.y;
+        var z = bonesOffset["leftHand"].rotation.z;
+        leftHandKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftHandKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftHand.setKeys(leftHandKeys);
+    }
+    // rightUpperArm keys
+    {
+        var x = bonesOffset["rightUpperArm"].rotation.x;
+        var y = bonesOffset["rightUpperArm"].rotation.y;
+        var z = bonesOffset["rightUpperArm"].rotation.z;
+        rightUpperArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperArm.setKeys(rightUpperArmKeys);
+    }
+    // rightLowerArm keys
+    {
+        var x = bonesOffset["rightLowerArm"].rotation.x;
+        var y = bonesOffset["rightLowerArm"].rotation.y;
+        var z = bonesOffset["rightLowerArm"].rotation.z;
+        rightLowerArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerArmKeys.push({ frame: 10, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(10), z) });
+        rightLowerArmKeys.push({ frame: 20, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(30), z) });
+        rightLowerArmKeys.push({ frame: 30, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(50), z) });
+        rightLowerArmKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(70), z) });
+        rightLowerArmKeys.push({ frame: 50, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(50), z) });
+        rightLowerArmKeys.push({ frame: 60, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(30), z) });
+        rightLowerArmKeys.push({ frame: 70, value: new BABYLON.Vector3(x, y + BABYLON.Tools.ToRadians(10), z) });
+        rightLowerArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerArm.setKeys(rightLowerArmKeys);
+    }
+    // rightHand keys
+    {
+        var x = bonesOffset["rightHand"].rotation.x;
+        var y = bonesOffset["rightHand"].rotation.y;
+        var z = bonesOffset["rightHand"].rotation.z;
+        rightHandKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightHandKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightHand.setKeys(rightHandKeys);
+    }
+    // leftUpperLeg keys
+    {
+        var x = bonesOffset["leftUpperLeg"].rotation.x;
+        var y = bonesOffset["leftUpperLeg"].rotation.y;
+        var z = bonesOffset["leftUpperLeg"].rotation.z;
+        leftUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperLeg.setKeys(leftUpperLegKeys);
+    }
+    // leftLowerLeg keys
+    {
+        var x = bonesOffset["leftLowerLeg"].rotation.x;
+        var y = bonesOffset["leftLowerLeg"].rotation.y;
+        var z = bonesOffset["leftLowerLeg"].rotation.z;
+        leftLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerLeg.setKeys(leftLowerLegKeys);
+    }
+    // leftUpperFoot keys
+    {
+        var x = bonesOffset["leftUpperFoot"].rotation.x;
+        var y = bonesOffset["leftUpperFoot"].rotation.y;
+        var z = bonesOffset["leftUpperFoot"].rotation.z;
+        leftUpperFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftUpperFoot.setKeys(leftUpperFootKeys);
+    }
+    // leftLowerFoot keys
+    {
+        var x = bonesOffset["leftLowerFoot"].rotation.x;
+        var y = bonesOffset["leftLowerFoot"].rotation.y;
+        var z = bonesOffset["leftLowerFoot"].rotation.z;
+        leftLowerFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        leftLowerFoot.setKeys(leftLowerFootKeys);
+    }
+    // rightUpperLeg keys
+    {
+        var x = bonesOffset["rightUpperLeg"].rotation.x;
+        var y = bonesOffset["rightUpperLeg"].rotation.y;
+        var z = bonesOffset["rightUpperLeg"].rotation.z;
+        rightUpperLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperLeg.setKeys(rightUpperLegKeys);
+    }
+    // rightLowerLeg keys
+    {
+        var x = bonesOffset["rightLowerLeg"].rotation.x;
+        var y = bonesOffset["rightLowerLeg"].rotation.y;
+        var z = bonesOffset["rightLowerLeg"].rotation.z;
+        rightLowerLegKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerLegKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerLeg.setKeys(rightLowerLegKeys);
+    }
+    // rightUpperFoot keys
+    {
+        var x = bonesOffset["rightUpperFoot"].rotation.x;
+        var y = bonesOffset["rightUpperFoot"].rotation.y;
+        var z = bonesOffset["rightUpperFoot"].rotation.z;
+        rightUpperFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightUpperFoot.setKeys(rightUpperFootKeys);
+    }
+    // rightLowerFoot keys
+    {
+        var x = bonesOffset["rightLowerFoot"].rotation.x;
+        var y = bonesOffset["rightLowerFoot"].rotation.y;
+        var z = bonesOffset["rightLowerFoot"].rotation.z;
+        rightLowerFootKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerFootKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        rightLowerFoot.setKeys(rightLowerFootKeys);
+    }
+    // head keys
+    {
+        var x = bonesOffset["head"].rotation.x;
+        var y = bonesOffset["head"].rotation.y;
+        var z = bonesOffset["head"].rotation.z;
+        headKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
+        headKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        head.setKeys(headKeys);
+    }
+
+    grabGroup.addTargetedAnimation(root, parts["root"]);
+    grabGroup.addTargetedAnimation(trunk, parts["trunk"]);
+    grabGroup.addTargetedAnimation(leftUpperArm, parts["leftUpperArm"]);
+    grabGroup.addTargetedAnimation(leftLowerArm, parts["leftLowerArm"]);
+    grabGroup.addTargetedAnimation(leftHand, parts["leftHand"]);
+    grabGroup.addTargetedAnimation(rightUpperArm, parts["rightUpperArm"]);
+    grabGroup.addTargetedAnimation(rightLowerArm, parts["rightLowerArm"]);
+    grabGroup.addTargetedAnimation(rightHand, parts["rightHand"]);
+    grabGroup.addTargetedAnimation(leftUpperLeg, parts["leftUpperLeg"]);
+    grabGroup.addTargetedAnimation(leftLowerLeg, parts["leftLowerLeg"]);
+    grabGroup.addTargetedAnimation(leftUpperFoot, parts["leftUpperFoot"]);
+    grabGroup.addTargetedAnimation(leftLowerFoot, parts["leftLowerFoot"]);
+    grabGroup.addTargetedAnimation(rightUpperLeg, parts["rightUpperLeg"]);
+    grabGroup.addTargetedAnimation(rightLowerLeg, parts["rightLowerLeg"]);
+    grabGroup.addTargetedAnimation(rightUpperFoot, parts["rightUpperFoot"]);
+    grabGroup.addTargetedAnimation(rightLowerFoot, parts["rightLowerFoot"]);
+    grabGroup.addTargetedAnimation(head, parts["head"]);
+    grabGroup.normalize(0, 80);
+
+    return grabGroup;
 }
 
 function slowZoom() {
