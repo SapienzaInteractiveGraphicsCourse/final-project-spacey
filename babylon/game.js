@@ -128,7 +128,7 @@ let createScene = function () {
     shadowGenerator.bias = 0.00001;
 
     // Skybox
-    let skybox = BABYLON.Mesh.CreateSphere("galaxy", 10, 700.0, scene);
+    let skybox = BABYLON.Mesh.CreateSphere("galaxy", 10, 1000.0, scene);
     let skyboxMaterial = new BABYLON.StandardMaterial("galaxyMaterial", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.Texture(SKY_PATH, scene, true);
