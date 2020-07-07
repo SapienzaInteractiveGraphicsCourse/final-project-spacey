@@ -664,8 +664,7 @@ let createScene = function () {
                         // oxy_cylinder.position.y = 1; //For !flagGb
                         if (flagQ) {
                             flagImp = 0;
-                            grab()
-                            oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
+                            grab();
                             oxy_cylinder.checkCollisions = false; //So that Hero does not collide with it while carrying
                             flagQ = 0;
                         }
@@ -731,13 +730,12 @@ let createScene = function () {
             walking.stop();
             standing.play();
             grabbing.play();
-            // var hero_new_angle = Math.atan2(oxy_cylinder.position.x,oxy_cylinder.position.z);
-            // console.log("New angle", hero_new_angle)
-            // console.log("Oxy rot", oxy_cylinder.rotation)
-            // console.log("Speed angle", SPEED_DIR_ANGLE)
-            // console.log("boy rot", boy.rotation)
+            var difference_angle = Math.atan2(boy.position.x-oxy_cylinder.position.x,boy.position.z-oxy_cylinder.position.z);
+
+            boy.rotation.y += (difference_angle - SPEED_DIR_ANGLE);
+            SPEED_DIR_ANGLE += (difference_angle - SPEED_DIR_ANGLE);
+            oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
             setTimeout(function () {
-                // standAnimation(actualBones).play(true);
                 flagGb = 1;
                 hl1.removeMesh(oxy_cylinder);
             }, 2000);
@@ -2242,13 +2240,13 @@ function grabAnimation(parts, bonesOffset) {
         var y = bonesOffset["trunk"].rotation.y;
         var z = bonesOffset["trunk"].rotation.z;
         trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z) });
-        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
-        trunkKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
-        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(30), y, z) });
-        trunkKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
-        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
-        trunkKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z) });
+        trunkKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
+        trunkKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(40), y, z) });
+        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(60), y, z) });
+        trunkKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(40), y, z) });
+        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
+        trunkKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
         trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         trunk.setKeys(trunkKeys);
     }

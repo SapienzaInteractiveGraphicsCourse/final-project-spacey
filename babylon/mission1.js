@@ -1,9 +1,9 @@
 const START_POS = new BABYLON.Vector3(-10.0, 8.0, -10.0);
-const SCALE_HERO = new BABYLON.Vector3(1.0, 1.0, 1.0);
-const TARGET_POS = new BABYLON.Vector3(0.0, 10, -50.0);
+const SCALE_HERO = new BABYLON.Vector3(2.0, 2.0, 2.0);
+const TARGET_POS = new BABYLON.Vector3(0.0, 8.0, -50.0);
 const FAR_CAM_POS = new BABYLON.Vector3(0.0, 45.0, 200.0);
 const OBJ_POS_1 = new BABYLON.Vector3(10.0, 10.0, -10.0);
-const OXYGEN_POS = new BABYLON.Vector3(-10.0, 7.2, -12.0);
+const OXYGEN_POS = new BABYLON.Vector3(-15.0, 7.6, -17.0);
 const SPEED = 0.75; //m/s
 const GRAVITY = -1.62; // m/s^2
 const TXT_TASK = "MISSION 1: Your partner needs you. Take an oxygen tank and save his life!";
