@@ -15,7 +15,6 @@ let startButton;
 let pos1;
 let pos2;
 let godrays;
-let godrays2;
 let dirLight;
 let widthGround = 1000;
 let heightGround = 1000;
@@ -28,6 +27,9 @@ let click;
 let rect5;
 var innerWidth = window.innerWidth;
 var innerHeight = window.innerHeight;
+var blinkE;
+var textE;
+
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
@@ -78,7 +80,6 @@ let createScene = function () {
     nearCamera.applyGravity = true;
     nearCamera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
     nearCamera.attachControl(canvas, true);
-    scene.activeCamera = nearCamera;
 
     var light = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 100, -200), scene);
     light.intensity = 0.8;
@@ -110,8 +111,8 @@ let createScene = function () {
     godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
     godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
     dirLight.position = godrays.mesh.position;
-    godrays.mesh.freezeWorldMatrix();
     godrays.mesh.doNotSyncBoundingInfo = true;
+
 
     click = new BABYLON.Sound("click", "../sounds/click.mp3", scene, null, {
         loop: false,
@@ -384,9 +385,9 @@ let createScene = function () {
         // special barrel ellipsoid checks
         if (this.name == "barrel" || this.name == "barrel2") {
             sphere.material.diffuseColor = BABYLON.Color3.Green();
-            console.log("barrel.ellipsoid: ", this.ellipsoid)
+            //console.log("barrel.ellipsoid: ", this.ellipsoid)
             var sbb = sphere.getBoundingInfo().boundingBox;
-            console.log("barrel sphere bb.maximum.scale(2): ", sbb.maximum.scale(2));
+            //console.log("barrel sphere bb.maximum.scale(2): ", sbb.maximum.scale(2));
         }
 
         sphere.visibility = .1;
@@ -514,6 +515,7 @@ let createScene = function () {
                             struggle.stop();
                             repair.stop();
                             walking.play(true); //loop
+
                             // move = true;
                             // moveWithPhysics();
                             break
@@ -615,6 +617,8 @@ let createScene = function () {
                     hl2.addMesh(oxy_cylinder, BABYLON.Color3.Green());
 
                     if (boy.position.subtract(target.position).length() < 5) {
+                        textE.text = 'press E to drop'
+                        blinkE.restart()
                         flagImp = 0;
                         walking.stop();
                         standing.play();
@@ -633,6 +637,7 @@ let createScene = function () {
                         congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
                         showEndGUI()
                         MISSION_STATUS = 1;
+                        blinkE.stop()
                     }
                     else {
 
@@ -658,11 +663,15 @@ let createScene = function () {
                 else {
                     flagE = 0;
                     if ((boy.position.subtract(oxy_cylinder.position).length()) < 5) {
+                        //textE.text = 'press Q to grab'
+
                         //console.log("Glow")
                         hl1.addMesh(oxy_cylinder, BABYLON.Color3.Red());
                         hl2.removeMesh(oxy_cylinder); //For !flagGb
                         // oxy_cylinder.position.y = 1; //For !flagGb
                         if (flagQ) {
+                            //blinkE.stop()
+                            //blinkE.play(false)
                             flagImp = 0;
                             grab()
                             oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
@@ -671,6 +680,9 @@ let createScene = function () {
                         }
                     }
                     else {
+                        // blinkE.stop()
+                        // blinkE.play(false)
+                        textE.alpha = 0;
                         flagQ = 0; //to keep q|Q deactivated untill oxy cylinder glows
                         hl1.removeMesh(oxy_cylinder);
                     }
@@ -699,16 +711,17 @@ let createScene = function () {
             }
 
             if (!MOON && !MISSION_STATUS) {
+
                 if (boy.position.subtract(target.position).length() < 5) {
+                    blinkE.play(true)
+                    //approachToPoint(target)
                     if (flagE) {
                         flagImp = 0;
                         walking.stop();
                         standing.play();
+                        blinkE.stop()
+                        blinkE.play(false)
                         repair.play(true);
-                        // var target_local = Math.atan2(target.position.z, target.position.x);
-                        // oxy_cylinder.position.x = target.position.x + Math.sin(target_local);
-                        // oxy_cylinder.position.y = target.position.y + 2;
-                        // oxy_cylinder.position.z = target.position.z + Math.cos(target_local);
 
                         var hlTarget_2 = new BABYLON.HighlightLayer("hlTarget_2", scene);
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
@@ -718,6 +731,7 @@ let createScene = function () {
                         congratsPlane.position.z = target.position.z;
                         congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
                         showEndGUI()
+
                         MISSION_STATUS = 1;
                     }
                 }
@@ -742,6 +756,21 @@ let createScene = function () {
                 hl1.removeMesh(oxy_cylinder);
             }, 2000);
         }
+        // function approachToPoint(mesh) {
+        //     if (boy.position.subtract(mesh.position).length() < 5) {
+        //         var dirTarget = mesh.position.subtract(boy.position)
+        //         var dirBoy = new BABYLON.Vector3.Zero().subtract(boy.forward)
+        //         var angle = boy.rotation.y + dot2(dirTarget, dirBoy) / (abs2(dirTarget) * abs2(dirBoy))
+        //         activatePhysics = 0;
+        //         moveto().play()
+        //         rotateto(angle).play()
+        //         walking.play()
+        //         if (boy.position.subtract(mesh.position).length() < 2) {
+
+        //         }
+
+        //     }
+        // }
 
         // function moveWithPhysics() {
         //     if (getContactGround()) {
@@ -800,7 +829,7 @@ let createScene = function () {
                 //console.log("sm", SPEED_MODULE);
                 //console.log("gra", GRAVITY_);
                 //console.log("sa", SPEED_ANGLE);
-                console.log("sp", boy.speed);
+                //console.log("sp", boy.speed);
                 var t_delta = (scene.getEngine().getDeltaTime() / 1000);
                 if (sy > Y_THRESH) {
                     // console.log("111")
@@ -1052,9 +1081,9 @@ function walkAnimation(parts, bonesOffset) {
         let y = bonesOffset["leftUpperArm"].rotation.y;
         let z = bonesOffset["leftUpperArm"].rotation.z;
         leftUpperArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        leftUpperArmKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z + BABYLON.Tools.ToRadians(- 3)) });
+        leftUpperArmKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(15), y, z + BABYLON.Tools.ToRadians(10)) });
         leftUpperArmKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
-        leftUpperArmKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(- 5), y, z + BABYLON.Tools.ToRadians(3)) });
+        leftUpperArmKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(-10), y, z + BABYLON.Tools.ToRadians(-10)) });
         leftUpperArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         leftUpperArm.setKeys(leftUpperArmKeys);
     }
@@ -1082,9 +1111,9 @@ function walkAnimation(parts, bonesOffset) {
         let y = bonesOffset["rightUpperArm"].rotation.y;
         let z = bonesOffset["rightUpperArm"].rotation.z;
         rightUpperArmKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        rightUpperArmKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(- 5), y, z + BABYLON.Tools.ToRadians(3)) });
+        rightUpperArmKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(- 10), y, z + BABYLON.Tools.ToRadians(10)) });
         rightUpperArmKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
-        rightUpperArmKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z + BABYLON.Tools.ToRadians(-3)) });
+        rightUpperArmKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(15), y, z + BABYLON.Tools.ToRadians(- 13)) });
         rightUpperArmKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         rightUpperArm.setKeys(rightUpperArmKeys);
     }
@@ -2190,7 +2219,7 @@ function repairAnimation(parts, bonesOffset) {
 }
 
 function grabAnimation(parts, bonesOffset) {
-    console.log("G called")
+    //console.log("G called")
     var grabGroup = new BABYLON.AnimationGroup("Grab");
     var root = new BABYLON.Animation("root", "position.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
     var trunk = new BABYLON.Animation("trunk", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
@@ -2785,11 +2814,49 @@ function fading(container, speed, start, end, callback) {
     animationBox.setKeys(keys);
     container.animations = [];
     container.animations.push(animationBox);
-    scene.beginAnimation(container, 0, 100, false, 1, function () {
-        if (callback && typeof (callback) === "function") {
-            callback();
-        }
+    return scene.beginAnimation(container, 0, 100, false, 1);
+
+}
+
+function blinking(container, speed, start, end) {
+
+    container.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+    container.animationPropertiesOverride.enableBlending = true;
+    container.animationPropertiesOverride.blendingSpeed = 0.05;
+    container.animationPropertiesOverride.loopMode = 0;
+
+
+    let animationBox = new BABYLON.Animation("fading", "alpha", speed, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+    // An array with all animation keys
+    let keys = [];
+
+    //At the animation key 0, the value of scaling is "1"
+    keys.push({
+        frame: 0,
+        value: end
     });
+
+    //At the animation key 100, the value of scaling is "1"
+    keys.push({
+        frame: 50,
+        value: start
+    });
+
+    keys.push({
+        frame: 100,
+        value: end
+    });
+
+    animationBox.setKeys(keys);
+
+    var animationGroup = new BABYLON.AnimationGroup("my group");
+    animationGroup.addTargetedAnimation(animationBox, container);
+
+    // Make sure to normalize animations to the same timeline
+    animationGroup.normalize(0, 100);
+
+    return animationGroup;
 
 }
 
@@ -2835,6 +2902,23 @@ function showGUI() {
     });
 
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var panelE = new BABYLON.GUI.StackPanel();
+    panelE.top = '-35%';
+    advancedTexture.addControl(panelE);
+
+    textE = new BABYLON.GUI.TextBlock();
+    textE.text = 'press E to repair'
+    textE.height = "80px";
+    textE.width = 1;
+    textE.color = "Orange";
+    textE.fontSize = 24;
+    textE.alpha = 0;
+    panelE.addControl(textE);
+
+    blinkE = blinking(textE, 30, 1, 0)
+
+    blinkE.pause();
 
     messageContainer = new BABYLON.GUI.Rectangle();
     messageContainer.height = 0.3;
@@ -2934,20 +3018,24 @@ function showGUI() {
         pos2.top = TARGET_POS.z / heightGround * mapImage.heightInPixels / 4
     })
 
-    fading(messageContainer, 30, 0, 1,
-        typeWriter(
-            fading(startButton, 40, 0, 1,
-                function () {
-                    startButton.onPointerUpObservable.addOnce(function () {
-                        click.play();
-                        fading(panel, 40, 1, 0);
-                        fading(messageContainer, 40, 1, 0, fastZoomIn);
-                    });
-                }
-            )
-        )
-    )
-    slowZoomIn();
+    setTimeout(async () => {
+        slowZoomIn();
+        var anim = fading(messageContainer, 30, 0, 1)
+        typeWriter();
+        await anim.waitAsync();
+        anim = fading(startButton, 30, 0, 1)
+        await anim.waitAsync();
+        startButton.onPointerUpObservable.addOnce(function () {
+            click.play();
+            setTimeout(async () => {
+                anim = fading(panel, 40, 1, 0);
+                await anim.waitAsync();
+                anim = fading(messageContainer, 40, 1, 0);
+                await anim.waitAsync();
+                fastZoomIn()
+            });
+        });
+    });
 }
 
 
@@ -2956,14 +3044,15 @@ function showEndGUI() {
     nearCamera.upperRadiusLimit = 300;
 
     slowZoomOut()
+    fading(rect2, 30, 1, 0)
+    fading(rect5, 30, 1, 0);
 
     var music = new BABYLON.Sound("end", "../sounds/" + GOAL_SOUND, scene, null, {
         loop: false,
         autoplay: true,
         volume: 0.75
     });
-    fading(rect2, 30, 1, 0)
-    fading(rect5, 30, 1, 0);
+
     setTimeout(function () {
         let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
         var messageContainer = new BABYLON.GUI.Rectangle();
@@ -2991,27 +3080,111 @@ function showEndGUI() {
         endButton.fontSize = 24;
         endButton.alpha = 0;
         panel.addControl(endButton);
-        fading(messageContainer, 30, 0, 1,
-            typeWriterEnd(
-                fading(endButton, 40, 0, 1,
-                    function () {
-                        endButton.onPointerUpObservable.addOnce(function () {
-                            click.play();
-                            fading(messageContainer, 40, 1, 0,
-                                fading(endButton, 40, 1, 0,
-                                    function () {
-                                        if (MOON) {
-                                            window.location.href = "mission2.html";
-                                        } else {
-                                            window.location.href = "index.html";
-                                        }
-                                    }
-                                ));
-                        });
+
+        setTimeout(async () => {
+            var anim = fading(messageContainer, 30, 0, 1)
+            typeWriterEnd();
+            await anim.waitAsync();
+            anim = fading(endButton, 30, 0, 1)
+            await anim.waitAsync();
+            endButton.onPointerUpObservable.addOnce(function () {
+                click.play();
+                setTimeout(async () => {
+                    anim = fading(endButton, 40, 1, 0);
+                    await anim.waitAsync();
+                    anim = fading(messageContainer, 40, 1, 0);
+                    await anim.waitAsync();
+                    if (MOON) {
+                        window.location.href = "mission2.html";
+                    } else {
+                        window.location.href = "index.html";
                     }
-                )
-            )
-        )
+                });
+            });
+        });
     }, 10000)
 
 }
+
+// function moveto() {
+
+//     boy.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+//     boy.animationPropertiesOverride.enableBlending = true;
+//     boy.animationPropertiesOverride.blendingSpeed = 0.05;
+//     boy.animationPropertiesOverride.loopMode = 0;
+
+
+//     let animationBox = new BABYLON.Animation("moving", "position", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+//     // An array with all animation keys
+//     let keys = [];
+
+//     //At the animation key 0, the value of scaling is "1"
+//     keys.push({
+//         frame: 0,
+//         value: boy.position
+//     });
+
+//     //At the animation key 100, the value of scaling is "1"
+
+//     keys.push({
+//         frame: 100,
+//         value: target.position
+//     });
+
+//     animationBox.setKeys(keys);
+
+//     var animationGroup = new BABYLON.AnimationGroup("moveGroup");
+//     animationGroup.addTargetedAnimation(animationBox, boy);
+
+//     // Make sure to normalize animations to the same timeline
+//     animationGroup.normalize(0, 100);
+
+//     return animationGroup;
+
+// }
+
+// function rotateto(angle) {
+
+//     boy.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+//     boy.animationPropertiesOverride.enableBlending = true;
+//     boy.animationPropertiesOverride.blendingSpeed = 0.05;
+//     boy.animationPropertiesOverride.loopMode = 0;
+
+
+//     let animationBox = new BABYLON.Animation("moving", "rotation", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+//     // An array with all animation keys
+//     let keys = [];
+
+//     //At the animation key 0, the value of scaling is "1"
+//     keys.push({
+//         frame: 0,
+//         value: boy.rotation
+//     });
+
+//     //At the animation key 100, the value of scaling is "1"
+
+//     keys.push({
+//         frame: 100,
+//         value: new BABYLON.Vector3(boy.rotation.x, angle, boy.rotation.z)
+//     });
+
+//     animationBox.setKeys(keys);
+
+//     var animationGroup = new BABYLON.AnimationGroup("moveGroup");
+//     animationGroup.addTargetedAnimation(animationBox, boy);
+
+//     // Make sure to normalize animations to the same timeline
+//     animationGroup.normalize(0, 100);
+
+//     return animationGroup;
+
+// }
+
+// function dot2(vec1, vec2) {
+//     return vec1.x * vec2.x + vec1.z * vec2.z;
+// }
+// function abs2(vec) {
+//     return Math.sqrt(vec.x * vec.x + vec.z * vec.z)
+// }
