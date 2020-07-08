@@ -70,7 +70,7 @@ let createScene = function () {
     // farCamera.parent = CoT;
     // CoT.position = FAR_CAM_POS;
 
-    nearCamera = new BABYLON.ArcRotateCamera("nearCamera", Math.PI / 2, 0, 2, FAR_CAM_POS, scene);
+    nearCamera = new BABYLON.ArcRotateCamera("nearCamera", 0, 0, 300, FAR_CAM_POS, scene);
     nearCamera.lowerRadiusLimit = 0;
     nearCamera.upperRadiusLimit = 300;
     nearCamera.wheelDeltaPercentage = 0.01;
@@ -107,12 +107,14 @@ let createScene = function () {
     godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, nearCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
     godrays.mesh.material.diffuseTexture.hasAlpha = true;
-    godrays.mesh.material.freeze();
     godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
     godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
-    dirLight.position = godrays.mesh.position;
     godrays.mesh.doNotSyncBoundingInfo = true;
-
+    godrays.mesh.material.freeze();
+    //godrays.mesh.freezeWorldMatrix();
+    godrays.mesh.doNotSyncBoundingInfo = true;
+    godrays.mesh.convertToUnIndexedMesh();
+    dirLight.position = godrays.mesh.position;
 
     click = new BABYLON.Sound("click", "../sounds/click.mp3", scene, null, {
         loop: false,
@@ -722,6 +724,11 @@ let createScene = function () {
                         blinkE.play(false)
                         repair.play(true);
 
+                        var difference_angle = Math.atan2(boy.position.x - target.position.x, boy.position.z - target.position.z);
+
+                        boy.rotation.y += (difference_angle - SPEED_DIR_ANGLE);
+                        SPEED_DIR_ANGLE += (difference_angle - SPEED_DIR_ANGLE);
+
                         var hlTarget_2 = new BABYLON.HighlightLayer("hlTarget_2", scene);
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
 
@@ -991,6 +998,7 @@ engine.runRenderLoop(function () {
     if (scene.isReady() && LOADING.timeout) {
         if (LOADING.scene.isReady()) {
             LOADING.scene.dispose();
+            slowZoomIn();
             showGUI();
         }
         scene.render();
@@ -2082,11 +2090,11 @@ function repairAnimation(parts, bonesOffset) {
         let x = bonesOffset["trunk"].rotation.x;
         let y = bonesOffset["trunk"].rotation.y;
         let z = bonesOffset["trunk"].rotation.z;
-        trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(21), y, z) });
-        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y - BABYLON.Tools.ToRadians(10), z - BABYLON.Tools.ToRadians(10)) });
+        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y + BABYLON.Tools.ToRadians(10), z + BABYLON.Tools.ToRadians(10)) });
+        trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
         trunk.setKeys(trunkKeys);
     }
     // leftUpperArm keys
@@ -3074,17 +3082,15 @@ function showGUI() {
     })
 
     setTimeout(async () => {
-        slowZoomIn();
+        startButton.alpha = 0;
         var anim = fading(messageContainer, 30, 0, 1)
         typeWriter();
         await anim.waitAsync();
         anim = fading(startButton, 30, 0, 1)
-        await anim.waitAsync();
         startButton.onPointerUpObservable.addOnce(function () {
             click.play();
             setTimeout(async () => {
                 anim = fading(panel, 40, 1, 0);
-                await anim.waitAsync();
                 anim = fading(messageContainer, 40, 1, 0);
                 await anim.waitAsync();
                 fastZoomIn()
@@ -3097,6 +3103,7 @@ function showGUI() {
 function showEndGUI() {
     scene.onKeyboardObservable.clear();
     nearCamera.upperRadiusLimit = 300;
+    nearCamera.detachControl(canvas);
 
     slowZoomOut()
     fading(rect2, 30, 1, 0)
@@ -3139,14 +3146,11 @@ function showEndGUI() {
         setTimeout(async () => {
             var anim = fading(messageContainer, 30, 0, 1)
             typeWriterEnd();
-            await anim.waitAsync();
             anim = fading(endButton, 30, 0, 1)
-            await anim.waitAsync();
             endButton.onPointerUpObservable.addOnce(function () {
                 click.play();
                 setTimeout(async () => {
                     anim = fading(endButton, 40, 1, 0);
-                    await anim.waitAsync();
                     anim = fading(messageContainer, 40, 1, 0);
                     await anim.waitAsync();
                     if (MOON) {
