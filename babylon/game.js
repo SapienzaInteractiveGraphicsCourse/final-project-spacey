@@ -627,10 +627,7 @@ let createScene = function () {
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
                         hlTarget_1.removeMesh(oxy_cylinder);
 
-                        congratsPlane.position.x = target.position.x;
-                        congratsPlane.position.y = target.position.y + 5;
-                        congratsPlane.position.z = target.position.z;
-                        congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
+                        congoMSg()
                         showEndGUI()
                         MISSION_STATUS = 1;
                     }
@@ -651,6 +648,7 @@ let createScene = function () {
                             oxy_cylinder.position.z = boy.position.z;
                             oxy_cylinder.rotation = new BABYLON.Vector3(0, Math.PI / 4, -Math.PI / 2);
                             oxy_cylinder.checkCollisions = true;
+                            instructionMsg("Don't throw away the cylinder\n Your partner needs help");
                         }
                     }
                 }
@@ -712,10 +710,7 @@ let createScene = function () {
                         var hlTarget_2 = new BABYLON.HighlightLayer("hlTarget_2", scene);
                         hlTarget_2.addMesh(hoopTarget, BABYLON.Color3.Green());
 
-                        congratsPlane.position.x = target.position.x;
-                        congratsPlane.position.y = target.position.y + 5;
-                        congratsPlane.position.z = target.position.z;
-                        congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
+                        congoMSg()
                         showEndGUI()
                         MISSION_STATUS = 1;
                     }
@@ -738,6 +733,7 @@ let createScene = function () {
             setTimeout(function () {
                 flagGb = 1;
                 hl1.removeMesh(oxy_cylinder);
+                instructionMsg("Nice job!!! \n Carry the cylinder to your partner");
             }, 2000);
         }
 
@@ -814,7 +810,7 @@ let createScene = function () {
                         boy.speed.y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
                         boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                         
-                        generatePoints();
+                        // generatePoints();
                     }
                     else {
                         activatePhysics = 0;
@@ -830,7 +826,7 @@ let createScene = function () {
         var sphereH = BABYLON.MeshBuilder.CreateSphere("sphereH", {}, scene);
         var myMaterialH = new BABYLON.StandardMaterial("myMaterialH", scene);
 
-        myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+        myMaterialH.diffuseColor = new BABYLON.Color3(1, 0, 0);
         sphereH.material = myMaterialH;
         function generatePoints() {
             var point = new BABYLON.Vector3();
@@ -883,42 +879,6 @@ let createScene = function () {
             }
 
         }
-        /******************START FINISH TEXT**************/
-        var font_type = "Arial";//verdana
-
-        var congratsPlane = BABYLON.MeshBuilder.CreatePlane("congratsPlane", { width: 10, height: 3 }, scene);
-        congratsPlane.rotate(BABYLON.Axis.Y, 7 * Math.PI / 6, BABYLON.Space.WORLD);
-        var DTWidth = 10 * 60;
-        var DTHeight = 3 * 60;
-
-        // var TXT_FINISH = "Congrats, you saved your partner!!!";
-
-        var congratsTexture = new BABYLON.DynamicTexture("congratsTexture", { width: DTWidth, height: DTHeight }, scene);
-
-        //Check width of text for given font type at any size of font
-        var ctx = congratsTexture.getContext();
-        var size = 12; //any value will work
-        ctx.font = size + "px " + font_type;
-        var textWidth = ctx.measureText(TXT_FINISH).width;
-
-        var ratio = textWidth / size;
-
-        //set font to be actually used to write text on dynamic texture
-        var font_size = Math.floor(DTWidth / (ratio * 1)); //size of multiplier (1) can be adjusted, increase for smaller text
-        var font = font_size + "px " + font_type;
-
-        //Draw text
-        congratsTexture.drawText("", null, null, font, "#DAA520", "transparent");
-        congratsTexture.hasAlpha = true;
-
-        var congratsMat = new BABYLON.StandardMaterial("congratsMat", scene);
-        congratsMat.specularColor = new BABYLON.Color3(0, 0, 0);
-        congratsMat.emissiveColor = new BABYLON.Color3(1, 1, 1);
-        congratsMat.diffuseTexture = congratsTexture;
-
-        congratsPlane.material = congratsMat;
-        /******************END FINISH TEXT**************/
-
 
     }, function (loading) {
         var ld = Math.floor(loading.loaded / loading.total * 100.0)
@@ -1004,6 +964,66 @@ function globalToLocal(vector, mesh) {
 //     target.position = setToGround(target);
 //     nav.position = setToGround(nav);
 // })
+
+function instructionMsg(TXT_INS) {
+    var panel = new BABYLON.GUI.StackPanel();
+    panel.top = '42%';
+    var advancedTexture;
+    advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    advancedTexture.addControl(panel);
+
+    var textIN = new BABYLON.GUI.TextBlock();
+    textIN.text = TXT_INS
+    textIN.height = "80px";
+    textIN.width = 1;
+    textIN.color = "Orange";
+    textIN.fontSize = 20;
+    panel.addControl(textIN);
+    setTimeout(function () {
+        advancedTexture.dispose();
+    }, 3000);
+}
+
+function congoMSg() {
+    var font_type = "Arial";//verdana
+
+    var congratsPlane = BABYLON.MeshBuilder.CreatePlane("congratsPlane", { width: 10, height: 3 }, scene);
+    congratsPlane.rotate(BABYLON.Axis.Y, 7 * Math.PI / 6, BABYLON.Space.WORLD);
+    var DTWidth = 10 * 60;
+    var DTHeight = 3 * 60;
+
+    // var TXT_FINISH = "Congrats, you saved your partner!!!";
+
+    var congratsTexture = new BABYLON.DynamicTexture("congratsTexture", { width: DTWidth, height: DTHeight }, scene);
+
+    //Check width of text for given font type at any size of font
+    var ctx = congratsTexture.getContext();
+    var size = 12; //any value will work
+    ctx.font = size + "px " + font_type;
+    var textWidth = ctx.measureText(TXT_FINISH).width;
+
+    var ratio = textWidth / size;
+
+    //set font to be actually used to write text on dynamic texture
+    var font_size = Math.floor(DTWidth / (ratio * 1)); //size of multiplier (1) can be adjusted, increase for smaller text
+    var font = font_size + "px " + font_type;
+
+    //Draw text
+    congratsTexture.drawText("", null, null, font, "#DAA520", "transparent");
+    congratsTexture.hasAlpha = true;
+
+    var congratsMat = new BABYLON.StandardMaterial("congratsMat", scene);
+    congratsMat.specularColor = new BABYLON.Color3(0, 0, 0);
+    congratsMat.emissiveColor = new BABYLON.Color3(1, 1, 1);
+    congratsMat.diffuseTexture = congratsTexture;
+
+    congratsPlane.material = congratsMat;
+
+    congratsPlane.position.x = target.position.x;
+    congratsPlane.position.y = target.position.y + 5;
+    congratsPlane.position.z = target.position.z;
+    congratsTexture.drawText(TXT_FINISH, null, null, font, "#DAA520", "transparent");
+}
 
 function updateRadar() {
 
@@ -2780,6 +2800,10 @@ function fastZoomIn() {
         messageContainer.dispose();
         panel.dispose();
     });
+    setTimeout(function () {
+        if (MOON) instructionMsg("Go near the oxygen cylinder and \n press 'Q' to pick");
+        else instructionMsg("Go to the rover to repair it");
+    }, 7000); 
 }
 
 
