@@ -673,8 +673,7 @@ let createScene = function () {
                             //blinkE.stop()
                             //blinkE.play(false)
                             flagImp = 0;
-                            grab()
-                            oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
+                            grab();
                             oxy_cylinder.checkCollisions = false; //So that Hero does not collide with it while carrying
                             flagQ = 0;
                         }
@@ -745,13 +744,12 @@ let createScene = function () {
             walking.stop();
             standing.play();
             grabbing.play();
-            // var hero_new_angle = Math.atan2(oxy_cylinder.position.x,oxy_cylinder.position.z);
-            // console.log("New angle", hero_new_angle)
-            // console.log("Oxy rot", oxy_cylinder.rotation)
-            // console.log("Speed angle", SPEED_DIR_ANGLE)
-            // console.log("boy rot", boy.rotation)
+            var difference_angle = Math.atan2(boy.position.x - oxy_cylinder.position.x, boy.position.z - oxy_cylinder.position.z);
+
+            boy.rotation.y += (difference_angle - SPEED_DIR_ANGLE);
+            SPEED_DIR_ANGLE += (difference_angle - SPEED_DIR_ANGLE);
+            oxy_cylinder.rotation = new BABYLON.Vector3(0, 0, 0);
             setTimeout(function () {
-                // standAnimation(actualBones).play(true);
                 flagGb = 1;
                 hl1.removeMesh(oxy_cylinder);
             }, 2000);
@@ -829,7 +827,7 @@ let createScene = function () {
                 //console.log("sm", SPEED_MODULE);
                 //console.log("gra", GRAVITY_);
                 //console.log("sa", SPEED_ANGLE);
-                //console.log("sp", boy.speed);
+                // console.log("sp", boy.speed);
                 var t_delta = (scene.getEngine().getDeltaTime() / 1000);
                 if (sy > Y_THRESH) {
                     // console.log("111")
@@ -844,6 +842,8 @@ let createScene = function () {
                         boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                         boy.speed.y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
                         boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+
+                        generatePoints();
                     }
                     else {
                         activatePhysics = 0;
@@ -856,7 +856,62 @@ let createScene = function () {
             }
         }
         /******************* END PHYSIC *****************/
+        var sphereH = BABYLON.MeshBuilder.CreateSphere("sphereH", {}, scene);
+        var myMaterialH = new BABYLON.StandardMaterial("myMaterialH", scene);
 
+        myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+        sphereH.material = myMaterialH;
+        function generatePoints() {
+            var point = new BABYLON.Vector3();
+
+            var hor_range = Math.pow(SPEED_MODULE, 2) * Math.sin(2 * SPEED_ANGLE) / (-GRAVITY_);
+            var tof = 2 * SPEED_MODULE * Math.sin(SPEED_ANGLE) / (-GRAVITY_);
+            var t_small = (scene.getEngine().getDeltaTime() / 1000);
+            console.log("Hor", hor_range)
+            console.log("Tof", tof)
+            //Horizontal ray
+            for (var i = 0; i < 5; i++) {
+
+                var ti = (1 / (5 - i)) * tof;
+
+                point.x = boy.position.x + boy.speed.x * ti;
+                point.y = boy.position.y + boy.speed.y * ti + 0.5 * GRAVITY_ * Math.pow(ti, 2);
+                point.z = boy.position.z + boy.speed.z * ti;
+
+                var rayY = new BABYLON.Ray();
+                var rayHelperY = new BABYLON.RayHelper(rayY);
+
+                var localMeshDirectionY = new BABYLON.Vector3(0, 0, -1);
+
+                var localMeshOriginY = globalToLocal(point, boy);
+                var length = 5;
+
+                rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+                rayHelperY.show(scene);
+                var hitInfoY = rayY.intersectsMeshes([ground]);
+
+                if (hitInfoY.length) {
+                    sphereH.setEnabled(true);
+                    sphereH.position.copyFrom(hitInfoY[0].pickedPoint);
+
+                    //console.log("Boy Y", ( boy.position.y));
+                    //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
+                    var pt1 = boy.position.subtract(point); //from boy at ground to source point on traj
+                    var pt2 = point.subtract(hitInfoY[0].pickedPoint); //from source point on traj to intersecting point
+                    var sh = point.subtract(hitInfoY[0].pickedPoint).length();
+                    //console.log("Horizontal", sh);
+
+                    if ((Math.sqrt(Math.pow(pt1.x, 2) + Math.pow(pt1.z, 2)) + Math.sqrt(Math.pow(pt2.x, 2) + Math.pow(pt2.z, 2))) < hor_range) {
+                        console.log("Hitting point found at ", point);
+                        break;
+                    }
+                }
+                else {
+                    sphereH.setEnabled(false);
+                }
+            }
+
+        }
         /******************START FINISH TEXT**************/
         var font_type = "Arial";//verdana
 
@@ -2271,13 +2326,13 @@ function grabAnimation(parts, bonesOffset) {
         var y = bonesOffset["trunk"].rotation.y;
         var z = bonesOffset["trunk"].rotation.z;
         trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z) });
-        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
-        trunkKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
-        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(30), y, z) });
-        trunkKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
-        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
-        trunkKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(5), y, z) });
+        trunkKeys.push({ frame: 10, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
+        trunkKeys.push({ frame: 30, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(40), y, z) });
+        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(60), y, z) });
+        trunkKeys.push({ frame: 50, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(40), y, z) });
+        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(20), y, z) });
+        trunkKeys.push({ frame: 70, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
         trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
         trunk.setKeys(trunkKeys);
     }
