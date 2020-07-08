@@ -845,7 +845,7 @@ let createScene = function () {
                         boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                         boy.speed.y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
                         boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
-                        
+
                         // generatePoints();
                     }
                     else {
@@ -2839,7 +2839,7 @@ function fastZoomIn() {
     setTimeout(function () {
         if (MOON) instructionMsg("Go near the oxygen cylinder and \n press 'Q' to pick");
         else instructionMsg("Go to the rover to repair it");
-    }, 7000); 
+    }, 7000);
 }
 
 
@@ -3011,6 +3011,7 @@ function showGUI() {
     messageContainer.width = 0.7;
     messageContainer.cornerRadius = 20;
     messageContainer.color = "Orange";
+    messageContainer.alpha = 0;
     advancedTexture.addControl(messageContainer);
 
     panel = new BABYLON.GUI.StackPanel();
@@ -3029,7 +3030,6 @@ function showGUI() {
     startButton.cornerRadius = 20;
     startButton.color = "Orange";
     startButton.fontSize = 24;
-    startButton.alpha = 0;
     panel.addControl(startButton);
 
     rect2 = new BABYLON.GUI.Rectangle();
@@ -3105,11 +3105,9 @@ function showGUI() {
     })
 
     setTimeout(async () => {
-        startButton.alpha = 0;
         var anim = fading(messageContainer, 30, 0, 1)
         typeWriter();
         await anim.waitAsync();
-        anim = fading(startButton, 30, 0, 1)
         startButton.onPointerUpObservable.addOnce(function () {
             click.play();
             setTimeout(async () => {
@@ -3145,6 +3143,7 @@ function showEndGUI() {
         messageContainer.width = 0.7;
         messageContainer.cornerRadius = 20;
         messageContainer.color = "Orange";
+        messageContainer.alpha = 0;
         advancedTexture.addControl(messageContainer);
 
         var panel = new BABYLON.GUI.StackPanel();
@@ -3163,17 +3162,15 @@ function showEndGUI() {
         endButton.cornerRadius = 20;
         endButton.color = "Orange";
         endButton.fontSize = 24;
-        endButton.alpha = 0;
         panel.addControl(endButton);
 
         setTimeout(async () => {
             var anim = fading(messageContainer, 30, 0, 1)
             typeWriterEnd();
-            anim = fading(endButton, 30, 0, 1)
             endButton.onPointerUpObservable.addOnce(function () {
                 click.play();
                 setTimeout(async () => {
-                    anim = fading(endButton, 40, 1, 0);
+                    anim = fading(panel, 40, 1, 0);
                     anim = fading(messageContainer, 40, 1, 0);
                     await anim.waitAsync();
                     if (MOON) {
