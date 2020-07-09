@@ -845,7 +845,7 @@ let createScene = function () {
                         boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                         boy.speed.y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
                         boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
-
+                        walking.speedRatio = getSpeedRatio()//oppure 1 / DELTA_FALLING
                         // generatePoints();
                     }
                     else {
@@ -914,6 +914,45 @@ let createScene = function () {
                 }
             }
 
+        }
+
+
+        function getSpeedRatio() {
+            var [x0, y0, z0] = [boy.position.x, boy.position.y, boy.position.z];
+            var [vx0, vy0, vz0] = [boy.speed.x, boy.speed.y, boy.speed.z];
+            var precision = 4;
+            var depth = 4;
+            var strangePhysics = 20;
+            // var halfFPS = 4;
+            //var stepsPerAnimation = 2;
+            var delta_steps = strangePhysics * DELTA_FALLING / precision;
+            var t_n, t_n_1, length, point_n, point_n_1, direction, origin, ray, hit;
+            var rayHelperY;
+            for (let n = 0; n < (precision + depth); n++) {
+                t_n = n * delta_steps;
+                t_n_1 = (n + 1) * delta_steps;
+                point_n = new BABYLON.Vector3((x0 + vx0 * t_n), (y0 + vy0 * t_n + 1 / strangePhysics * 1 / 2 * GRAVITY_ * Math.pow(t_n, 2)), (z0 + vz0 * t_n))
+                point_n_1 = new BABYLON.Vector3((x0 + vx0 * t_n_1), (y0 + vy0 * t_n_1 + 1 / strangePhysics * 1 / 2 * GRAVITY_ * Math.pow(t_n_1, 2)), (z0 + vz0 * t_n_1))
+                direction = BABYLON.Vector3.Normalize(point_n_1.subtract(point_n));
+                origin = point_n;
+                length = (point_n_1.subtract(point_n)).length();
+                //var star = new BABYLON.Mesh.CreateSphere('star', 16, .2, scene);
+                //star.position = point_n
+                ray = new BABYLON.Ray(origin, direction, length);
+                rayHelperY = new BABYLON.RayHelper(ray)
+                rayHelperY.show(scene);
+                hit = ray.intersectsMeshes([ground]);
+                if (hit.length) {
+                    //var star = new BABYLON.Mesh.CreateSphere('star', 16, .2, scene);
+                    //star.position = hit[0].pickedPoint
+                    var mean = (t_n + t_n_1) / 2
+                    //console.log('1/MEAN: ' + 1 / mean * strangePhysics)
+                    return 1 / mean * strangePhysics;
+                }
+            }
+            //console.log('DELTA_FALLING_ :' + DELTA_FALLING_)
+
+            return 1 / DELTA_FALLING;
         }
 
     }, function (loading) {
