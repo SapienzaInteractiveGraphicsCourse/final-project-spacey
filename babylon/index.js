@@ -284,7 +284,7 @@ let createScene = function () {
     buttonS.thickness = 0;
     buttonS.onPointerUpObservable.add(function () {
         click.play()
-        window.location.href = "mission1.html";
+        openStoryDialog();
     });
     panel.addControl(buttonS);
 
@@ -529,7 +529,49 @@ function openCommandDialog() {
     panel.addControl(text);
 
     var text1 = new BABYLON.GUI.TextBlock();
-    text1.text = 'W A S D keys to move\nQ E keys to grab objects\narrow keys and mouse to rotate'
+    text1.text = 'W & S keys to move forward or stop respectively\nA & D keys to turn slight left or right\nQ & E keys to grab or throw objects\nArrow keys and mouse to rotate camera view'
+    text1.height = "100px";
+    text1.width = 1;
+    text1.color = "Orange";
+    text1.fontSize = 20;
+    panel.addControl(text1);
+
+    var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "close");
+    buttonC.width = 0.30;
+    buttonC.height = "40px";
+    buttonC.color = "orange";
+    buttonC.fontSize = 20;
+    buttonC.cornerRadius = 20;
+    buttonC.onPointerUpObservable.add(function () {
+        click.play()
+        messageContainer.dispose()
+    });
+    panel.addControl(buttonC);
+}
+
+function openStoryDialog() {
+    var messageContainer = new BABYLON.GUI.Rectangle();
+    messageContainer.height = 0.5;
+    messageContainer.width = 0.5;
+    messageContainer.cornerRadius = 20;
+    messageContainer.color = "Orange";
+    messageContainer.background = "black"
+    //    messageContainer.thickness = 0;
+    advancedTexture.addControl(messageContainer);
+
+    var panel = new BABYLON.GUI.StackPanel();
+    messageContainer.addControl(panel);
+
+    var text = new BABYLON.GUI.TextBlock();
+    text.text = 'story'
+    text.height = "40px";
+    text.width = 1;
+    text.color = "Orange";
+    text.fontSize = 30;
+    panel.addControl(text);
+
+    var text1 = new BABYLON.GUI.TextBlock();
+    text1.text = 'The game consists of two levels which define two different\nmissions, Mission 1 (Moon) and Mission 2 (Mars). In Mission\nMoon save your co-astronaut by carrying an oxygen cylinder to him.\nIn Mission Mars go to a rover nearby and start repairing it.'
     text1.height = "100px";
     text1.width = 1;
     text1.color = "Orange";
@@ -547,7 +589,4 @@ function openCommandDialog() {
         messageContainer.dispose()
     });
     panel.addControl(buttonS);
-
-
-
 }

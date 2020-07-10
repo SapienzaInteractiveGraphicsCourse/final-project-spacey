@@ -996,7 +996,7 @@ function globalToLocal(vector, mesh) {
 
 function instructionMsg(TXT_INS) {
     var panel = new BABYLON.GUI.StackPanel();
-    panel.top = '42%';
+    panel.top = '-40%';
     var advancedTexture;
     advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
     advancedTexture.addControl(panel);
