@@ -81,40 +81,47 @@ let createScene = function () {
     nearCamera.collisionRadius = new BABYLON.Vector3(2, 1, 2)
     nearCamera.attachControl(canvas, true);
 
-    var light = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 100, -200), scene);
-    light.intensity = 0.8;
-    light.diffuse = new BABYLON.Color3(1, 1, 1);
-    light.specular = new BABYLON.Color3(1, 1, 1);
-    light.ambient = new BABYLON.Color3(1, 1, 1);
-    light.groundColor = new BABYLON.Color3(0, 0, 0);
+    // var light = new BABYLON.PointLight("light", new BABYLON.Vector3(0, 100, -200), scene);
+    // light.intensity = 0.8;
+    // light.diffuse = new BABYLON.Color3(1, 1, 1);
+    // light.specular = new BABYLON.Color3(1, 1, 1);
+    // light.ambient = new BABYLON.Color3(1, 1, 1);
+    // light.groundColor = new BABYLON.Color3(0, 0, 0);
 
-    let hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 100, -200), scene);
-    hemiLight.intensity = 0.1;
+    let hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, -1, 0), scene);
+    hemiLight.intensity = 0.01;
     hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
     hemiLight.specular = new BABYLON.Color3(1, 1, 1);
     hemiLight.ambient = new BABYLON.Color3(1, 1, 1);
     hemiLight.groundColor = new BABYLON.Color3(0, 0, 0);
 
     dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(0, -1, 2), scene);
-    dirLight.intensity = 1;
+    dirLight.intensity = 2;
     dirLight.diffuse = new BABYLON.Color3(1, 1, 1);
     dirLight.specular = new BABYLON.Color3(1, 1, 1);
     dirLight.ambient = new BABYLON.Color3(1, 1, 1);
     dirLight.groundColor = new BABYLON.Color3(0, 0, 0);
-    dirLight.shadowMaxZ = 3000;
+    dirLight.shadowMaxZ = 2000;
     dirLight.shadowMinZ = 1;
 
     godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, nearCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
     godrays.mesh.material.diffuseTexture.hasAlpha = true;
-    godrays.mesh.position = new BABYLON.Vector3(0, 100, -200);
-    godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
-    godrays.mesh.doNotSyncBoundingInfo = true;
-    godrays.mesh.material.freeze();
+    if (MOON) {
+        godrays.mesh.position = new BABYLON.Vector3(0, 150, -450);
+        dirLight.position = godrays.mesh.position;
+        dirLight.direction = BABYLON.Vector3.Normalize(new BABYLON.Vector3(0, -150, 450))
+        godrays.mesh.scaling = new BABYLON.Vector3(5, 5, 5);
+    } else {
+        godrays.mesh.position = new BABYLON.Vector3(0, 100, -450);
+        dirLight.position = godrays.mesh.position;
+        dirLight.direction = BABYLON.Vector3.Normalize(new BABYLON.Vector3(0, -100, 450))
+        godrays.mesh.scaling = new BABYLON.Vector3(4, 4, 4);
+    }
+    //godrays.mesh.material.freeze();
     //godrays.mesh.freezeWorldMatrix();
-    godrays.mesh.doNotSyncBoundingInfo = true;
-    godrays.mesh.convertToUnIndexedMesh();
-    dirLight.position = godrays.mesh.position;
+    //godrays.mesh.doNotSyncBoundingInfo = true;
+    //godrays.mesh.convertToUnIndexedMesh();
 
     click = new BABYLON.Sound("click", "../sounds/click.mp3", scene, null, {
         loop: false,
@@ -123,7 +130,7 @@ let createScene = function () {
     });
 
     // Shadows
-    let shadowGenerator = new BABYLON.ShadowGenerator(5000, dirLight);
+    let shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
     shadowGenerator.useBlurExponentialShadowMap = true;
     shadowGenerator.useKernelBlur = true;
     shadowGenerator.blurKernel = 1;
@@ -205,9 +212,9 @@ let createScene = function () {
         oxy_cylinder.rotate(BABYLON.Axis.Z, -Math.PI / 2, BABYLON.Space.WORLD);
         oxy_cylinder.rotate(BABYLON.Axis.Y, Math.PI / 4, BABYLON.Space.WORLD);
         //oxy_cylinder.scaling = new BABYLON.Vector3(3, 3, 3)
-        // shadowGenerator.addShadowCaster(oxy_cylinder);
-        // shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
-        // oxy_cylinder.receiveShadows = true;
+        shadowGenerator.addShadowCaster(oxy_cylinder);
+        shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
+        oxy_cylinder.receiveShadows = false;
         oxy_cylinder.checkCollisions = true;
         oxy_cylinder.applyGravity = true;
         var oxyMaterial = new BABYLON.StandardMaterial("oxyMaterial", scene);
@@ -279,9 +286,12 @@ let createScene = function () {
         nav = scene.getMeshByName(newMeshes[0].name);
         nav.position = OBJ_POS_1;
         nav.scaling = new BABYLON.Vector3(3, 3, 3)
+        if (!MOON) {
+            nav.scaling = new BABYLON.Vector3(7, 7, 7)
+        }
         shadowGenerator.addShadowCaster(nav);
         shadowGenerator.getShadowMap().renderList.push(nav);
-        nav.receiveShadows = true;
+        nav.receiveShadows = false;
         nav.checkCollisions = true;
         nav.material.freeze();
         nav.freezeWorldMatrix();
@@ -352,7 +362,7 @@ let createScene = function () {
         //target.rotation = new BABYLON.Vector3(0, 0, 0)
         shadowGenerator.addShadowCaster(target);
         shadowGenerator.getShadowMap().renderList.push(target);
-        target.receiveShadows = true;
+        target.receiveShadows = false;
         target.checkCollisions = true;
         target.material.freeze();
         target.freezeWorldMatrix();
@@ -395,8 +405,33 @@ let createScene = function () {
         sphere.visibility = .1;
     }
 
+    // var mix = new BABYLON.MixMaterial("mix", scene);
+
+    // // Setup mix texture 1
+    // mix.mixTexture1 = new BABYLON.Texture("textures/mixMap.png", scene);
+    // mix.diffuseTexture1 = new BABYLON.Texture("textures/rock.png", scene);
+    // mix.diffuseTexture2 = new BABYLON.Texture("textures/rock.png", scene);
+    // mix.diffuseTexture3 = new BABYLON.Texture("textures/grass.png", scene);
+    // mix.diffuseTexture4 = new BABYLON.Texture("textures/floor.png", scene);
+
+    // mix.diffuseTexture1.uScale = mix.diffuseTexture1.vScale = 10;
+    // mix.diffuseTexture2.uScale = mix.diffuseTexture2.vScale = 10;
+    // mix.diffuseTexture3.uScale = mix.diffuseTexture3.vScale = 10;
+    // mix.diffuseTexture4.uScale = mix.diffuseTexture4.vScale = 10;
+
     var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
+    // groundMat.diffuseTexture.level = 1;
+    // groundMat.diffuseTexture.uScale = 1;
+    // groundMat.diffuseTexture.vScale = 1;
+    groundMat.bumpTexture = new BABYLON.Texture("../images/bump_ground.png", scene);
+    groundMat.bumpTexture.level = 1;
+    groundMat.bumpTexture.uScale = 20;
+    groundMat.bumpTexture.vScale = 20;
+    groundMat.useParallax = true;
+    groundMat.useParallaxOcclusion = true;
+    groundMat.parallaxScaleBias = 0.1;
+    //groundMat.opacityTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
     var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/" + MINI_MAP_PATH, widthGround, heightGround, widthGround, 0, 10, scene, false, function () {
         ground.optimize(128);
         groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -404,8 +439,8 @@ let createScene = function () {
         ground.position = new BABYLON.Vector3(0, 0, 0);
         //ground.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
         ground.scaling = new BABYLON.Vector3(1, 3, 1); // make it bigger
-        shadowGenerator.addShadowCaster(ground);
-        shadowGenerator.getShadowMap().renderList.push(ground);
+        // shadowGenerator.addShadowCaster(ground);
+        // shadowGenerator.getShadowMap().renderList.push(ground);
         ground.receiveShadows = true;
         ground.checkCollisions = true;
         // ground.material.freeze();
@@ -419,6 +454,7 @@ let createScene = function () {
         boy.scaling = SCALE_HERO;
         shadowGenerator.addShadowCaster(boy);
         shadowGenerator.getShadowMap().renderList.push(boy);
+        boy.receiveShadows = false;
         boy.checkCollisions = true;
         boy.applyGravity = true;
         boy.material.freeze();
@@ -922,7 +958,7 @@ let createScene = function () {
             var [vx0, vy0, vz0] = [boy.speed.x, boy.speed.y, boy.speed.z];
             var precision = 4;
             var depth = 4;
-            var strangePhysics = 20;
+            var strangePhysics = 15;
             // var halfFPS = 4;
             //var stepsPerAnimation = 2;
             var delta_steps = strangePhysics * DELTA_FALLING / precision;
@@ -943,6 +979,36 @@ let createScene = function () {
                 rayHelperY.show(scene);
                 hit = ray.intersectsMeshes([ground]);
                 if (hit.length) {
+                    // var customMesh = new BABYLON.Mesh("custom", scene);
+                    // var point = hit[0].pickedPoint
+                    // var ofx = 0.2
+                    // var ofz = 0.3
+                    // //Set arrays for positions and indices
+                    // var positions = [point.x - ofx, point.y, point.z - ofz, point.x - ofx, point.y, point.z + ofz, point.x + ofx, point.y, point.z + ofz, point.x + ofx, point.y, point.z - ofz];
+                    // var indices = [0, 1, 2, 3];
+
+                    // //Empty array to contain calculated values
+                    // var normals = [];
+
+                    // var vertexData = new BABYLON.VertexData();
+                    // BABYLON.VertexData.ComputeNormals(positions, indices, normals);
+
+                    // //Assign positions, indices and normals to vertexData
+                    // vertexData.positions = positions;
+                    // vertexData.indices = indices;
+                    // vertexData.normals = normals;
+
+                    // //Apply vertexData to custom mesh
+                    // vertexData.applyToMesh(customMesh);
+
+                    // /******Display custom mesh in wireframe view to show its creation****************/
+                    // var mat = new BABYLON.StandardMaterial("mat", scene);
+                    // mat.diffuseTexture = new BABYLON.Texture("../images/foot.png", scene);
+                    // mat.bumpTexture = new BABYLON.Texture("../images/foot_bump.png", scene);
+                    // //mat.wireframe = true;
+                    // mat.backFaceCulling = false;
+
+                    // customMesh.material = mat;
                     //var star = new BABYLON.Mesh.CreateSphere('star', 16, .2, scene);
                     //star.position = hit[0].pickedPoint
                     var mean = (t_n + t_n_1) / 2

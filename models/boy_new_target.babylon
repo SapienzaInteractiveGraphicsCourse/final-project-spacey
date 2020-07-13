@@ -1,4 +1,4 @@
-{"producer":{"name":"Blender","version":"2.83.0","exporter_version":"6.4.1","file":"boy_new_clean.babylon"},
+{"producer":{"name":"Blender","version":"2.83.0","exporter_version":"6.4.1","file":"boy_new_target.babylon"},
 "autoClear":true,"clearColor":[0.0509,0.0509,0.0509],"gravity":[0,-9.81,0],
 "materials":[{"name":"Baked","id":"Baked","customType":"BABYLON.PBRMaterial","backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4,"environmentIntensity":1,"roughness":0.4667,"alpha":1,"transparencyMode":0,"alphaCutOff":0.4,"metallic":0,
 "albedoTexture":{"name":"z2_Color_s.jpg","level":1,"hasAlpha":false,"coordinatesMode":0,"uOffset":0,"vOffset":0,"uScale":1,"vScale":1,"uAng":0,"vAng":0,"wAng":0,"wrapU":1,"wrapV":1,"coordinatesIndex":0},"useAlphaFromAlbedoTexture":false,
