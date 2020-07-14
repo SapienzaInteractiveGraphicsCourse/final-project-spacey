@@ -88,7 +88,7 @@ let createScene = function () {
     // light.ambient = new BABYLON.Color3(1, 1, 1);
     // light.groundColor = new BABYLON.Color3(0, 0, 0);
 
-    let hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, -1, 0), scene);
+    let hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     hemiLight.intensity = 0.01;
     hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
     hemiLight.specular = new BABYLON.Color3(1, 1, 1);
@@ -104,7 +104,7 @@ let createScene = function () {
     // dirLight.shadowMaxZ = 2000;
     // dirLight.shadowMinZ = 200;
 
-    godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, nearCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
+    godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, nearCamera, null, 50, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
     godrays.mesh.material.diffuseTexture.hasAlpha = true;
     if (MOON) {
@@ -405,39 +405,29 @@ let createScene = function () {
         sphere.visibility = .1;
     }
 
-    // var mix = new BABYLON.MixMaterial("mix", scene);
-
-    // // Setup mix texture 1
-    // mix.mixTexture1 = new BABYLON.Texture("textures/mixMap.png", scene);
-    // mix.diffuseTexture1 = new BABYLON.Texture("textures/rock.png", scene);
-    // mix.diffuseTexture2 = new BABYLON.Texture("textures/rock.png", scene);
-    // mix.diffuseTexture3 = new BABYLON.Texture("textures/grass.png", scene);
-    // mix.diffuseTexture4 = new BABYLON.Texture("textures/floor.png", scene);
-
-    // mix.diffuseTexture1.uScale = mix.diffuseTexture1.vScale = 10;
-    // mix.diffuseTexture2.uScale = mix.diffuseTexture2.vScale = 10;
-    // mix.diffuseTexture3.uScale = mix.diffuseTexture3.vScale = 10;
-    // mix.diffuseTexture4.uScale = mix.diffuseTexture4.vScale = 10;
-
     var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
-    // groundMat.diffuseTexture.level = 1;
-    // groundMat.diffuseTexture.uScale = 1;
-    // groundMat.diffuseTexture.vScale = 1;
     groundMat.bumpTexture = new BABYLON.Texture("../images/bump_ground.png", scene);
-    groundMat.bumpTexture.level = 1.5;
-    if (!MOON) {
-        groundMat.bumpTexture.level = 3;
+    groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
+    if (MOON) {
+        groundMat.diffuseTexture.level = 1;
+        groundMat.diffuseTexture.uScale = 5;
+        groundMat.diffuseTexture.vScale = 5;
+        groundMat.bumpTexture.level = 1.5;
+        groundMat.bumpTexture.uScale = 20;
+        groundMat.bumpTexture.vScale = 20;
+    } else {
+        groundMat.diffuseTexture.level = 1.3;
+        groundMat.diffuseTexture.uScale = 5;
+        groundMat.diffuseTexture.vScale = 5;
+        groundMat.bumpTexture.level = 4;
+        groundMat.bumpTexture.uScale = 30;
+        groundMat.bumpTexture.vScale = 30;
     }
-    groundMat.bumpTexture.uScale = 20;
-    groundMat.bumpTexture.vScale = 20;
-    groundMat.useParallax = true;
-    groundMat.useParallaxOcclusion = true;
-    groundMat.parallaxScaleBias = 0.1;
-    //groundMat.opacityTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
+
+
     var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "../images/" + MINI_MAP_PATH, widthGround, heightGround, widthGround, 0, 10, scene, false, function () {
         ground.optimize(128);
-        groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
         ground.material = groundMat;
         ground.position = new BABYLON.Vector3(0, 0, 0);
         //ground.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
@@ -676,10 +666,11 @@ let createScene = function () {
                         congoMSg()
                         showEndGUI()
                         MISSION_STATUS = 1;
-                        blinkE.stop()
-                    }
-                    else {
+                        blinkE.play(true)
+                    } else {
 
+                        blinkE.stop()
+                        textE.alpha = 0;
                         oxy_cylinder.position.x = boy.position.x - Math.sin(SPEED_DIR_ANGLE);
                         oxy_cylinder.position.y = boy.position.y + 2;
                         oxy_cylinder.position.z = boy.position.z - Math.cos(SPEED_DIR_ANGLE);
@@ -758,8 +749,9 @@ let createScene = function () {
                         flagImp = 0;
                         walking.stop();
                         standing.play();
+
                         blinkE.stop()
-                        blinkE.play(false)
+                        textE.alpha = 0;
                         repair.play(true);
 
                         var difference_angle = Math.atan2(boy.position.x - target.position.x, boy.position.z - target.position.z);
@@ -775,6 +767,9 @@ let createScene = function () {
 
                         MISSION_STATUS = 1;
                     }
+                } else {
+                    blinkE.stop()
+                    textE.alpha = 0;
                 }
             }
         });
@@ -1038,6 +1033,13 @@ let createScene = function () {
     // farCamera.checkCollisions = true;
     // farCamera.applyGravity = true;
     // farCamera.collisionRadius = new BABYLON.Vector3(2, 2, 2);
+    if (!MOON) {
+        scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
+        scene.fogDensity = 0.001;
+        scene.fogStart = 300.0;
+        scene.fogEnd = 600.0;
+        scene.fogColor = new BABYLON.Color3(0.7, 0.5, 0.3);
+    }
     optimizer.start();
     return scene;
 };
@@ -3047,7 +3049,7 @@ function blinking(container, speed, start, end) {
 
     animationBox.setKeys(keys);
 
-    var animationGroup = new BABYLON.AnimationGroup("my group");
+    var animationGroup = new BABYLON.AnimationGroup("blinking");
     animationGroup.addTargetedAnimation(animationBox, container);
 
     // Make sure to normalize animations to the same timeline
