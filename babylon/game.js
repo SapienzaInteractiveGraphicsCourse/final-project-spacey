@@ -101,8 +101,8 @@ let createScene = function () {
     dirLight.specular = new BABYLON.Color3(1, 1, 1);
     dirLight.ambient = new BABYLON.Color3(1, 1, 1);
     dirLight.groundColor = new BABYLON.Color3(0, 0, 0);
-    dirLight.shadowMaxZ = 2000;
-    dirLight.shadowMinZ = 1;
+    // dirLight.shadowMaxZ = 2000;
+    // dirLight.shadowMinZ = 200;
 
     godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, nearCamera, null, 100, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
     godrays.mesh.material.diffuseTexture = new BABYLON.Texture('../images/sun.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
@@ -131,11 +131,8 @@ let createScene = function () {
 
     // Shadows
     let shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
-    shadowGenerator.useBlurExponentialShadowMap = true;
-    shadowGenerator.useKernelBlur = true;
-    shadowGenerator.blurKernel = 1;
-    shadowGenerator.forceBackFacesOnly = true;
-    shadowGenerator.bias = 0.00001;
+    shadowGenerator.usePercentageCloserFiltering = true;
+    //shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_LOW; // otherwise requires too much memory
 
     // Skybox
     let skybox = BABYLON.Mesh.CreateSphere("galaxy", 10, 1000.0, scene);
@@ -161,13 +158,13 @@ let createScene = function () {
         earthMaterial.ambientColor = new BABYLON.Color3(1, 1, 1)
 
         earth.material = earthMaterial;
-        shadowGenerator.addShadowCaster(earth);
-        shadowGenerator.getShadowMap().renderList.push(earth);
-        earth.receiveShadows = true;
-        earth.material.freeze();
-        earth.freezeWorldMatrix();
-        earth.doNotSyncBoundingInfo = true;
-        earth.convertToUnIndexedMesh();
+        // shadowGenerator.addShadowCaster(earth);
+        // shadowGenerator.getShadowMap().renderList.push(earth);
+        // earth.receiveShadows = true;
+        // earth.material.freeze();
+        // earth.freezeWorldMatrix();
+        // earth.doNotSyncBoundingInfo = true;
+        // earth.convertToUnIndexedMesh();
 
         //Oxygen cylinder
         var createHemisphere = function (segments, diameter, light) {
@@ -214,7 +211,7 @@ let createScene = function () {
         //oxy_cylinder.scaling = new BABYLON.Vector3(3, 3, 3)
         shadowGenerator.addShadowCaster(oxy_cylinder);
         shadowGenerator.getShadowMap().renderList.push(oxy_cylinder);
-        oxy_cylinder.receiveShadows = false;
+        oxy_cylinder.receiveShadows = true;
         oxy_cylinder.checkCollisions = true;
         oxy_cylinder.applyGravity = true;
         var oxyMaterial = new BABYLON.StandardMaterial("oxyMaterial", scene);
@@ -227,20 +224,23 @@ let createScene = function () {
     var step = new BABYLON.Sound("step0", "../sounds/step.wav", scene, null, {
         loop: false,
         autoplay: false,
-        volume: 0.1
+        volume: 0.5
     });
 
     var step1 = new BABYLON.Sound("step1", "../sounds/step1.wav", scene, null, {
         loop: false,
         autoplay: false,
-        volume: 0.1
+        volume: 0.5
     });
 
     var step2 = new BABYLON.Sound("step2", "../sounds/step2.wav", scene, null, {
         loop: false,
         autoplay: false,
-        volume: 0.1
+        volume: 0.5
     });
+
+    var steps = [step, step1, step2];
+
 
     // var groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     // groundMat.diffuseTexture = new BABYLON.Texture("../images/" + MAP_TEXT, scene);
@@ -291,7 +291,7 @@ let createScene = function () {
         }
         shadowGenerator.addShadowCaster(nav);
         shadowGenerator.getShadowMap().renderList.push(nav);
-        nav.receiveShadows = false;
+        nav.receiveShadows = true;
         nav.checkCollisions = true;
         nav.material.freeze();
         nav.freezeWorldMatrix();
@@ -362,7 +362,7 @@ let createScene = function () {
         //target.rotation = new BABYLON.Vector3(0, 0, 0)
         shadowGenerator.addShadowCaster(target);
         shadowGenerator.getShadowMap().renderList.push(target);
-        target.receiveShadows = false;
+        target.receiveShadows = true;
         target.checkCollisions = true;
         target.material.freeze();
         target.freezeWorldMatrix();
@@ -425,7 +425,10 @@ let createScene = function () {
     // groundMat.diffuseTexture.uScale = 1;
     // groundMat.diffuseTexture.vScale = 1;
     groundMat.bumpTexture = new BABYLON.Texture("../images/bump_ground.png", scene);
-    groundMat.bumpTexture.level = 1;
+    groundMat.bumpTexture.level = 1.5;
+    if (!MOON) {
+        groundMat.bumpTexture.level = 3;
+    }
     groundMat.bumpTexture.uScale = 20;
     groundMat.bumpTexture.vScale = 20;
     groundMat.useParallax = true;
@@ -443,6 +446,7 @@ let createScene = function () {
         // shadowGenerator.getShadowMap().renderList.push(ground);
         ground.receiveShadows = true;
         ground.checkCollisions = true;
+
         // ground.material.freeze();
         // ground.freezeWorldMatrix();
     });
@@ -454,7 +458,7 @@ let createScene = function () {
         boy.scaling = SCALE_HERO;
         shadowGenerator.addShadowCaster(boy);
         shadowGenerator.getShadowMap().renderList.push(boy);
-        boy.receiveShadows = false;
+        boy.receiveShadows = true;
         boy.checkCollisions = true;
         boy.applyGravity = true;
         boy.material.freeze();
@@ -979,6 +983,8 @@ let createScene = function () {
                 rayHelperY.show(scene);
                 hit = ray.intersectsMeshes([ground]);
                 if (hit.length) {
+                    var randStep = steps[Math.floor(Math.random() * steps.length)];
+                    randStep.play()
                     // var customMesh = new BABYLON.Mesh("custom", scene);
                     // var point = hit[0].pickedPoint
                     // var ofx = 0.2
@@ -3089,7 +3095,7 @@ function showGUI() {
     var music2 = new BABYLON.Sound("back", "../sounds/" + BACK_SOUND, scene, null, {
         loop: true,
         autoplay: true,
-        volume: 0.25
+        volume: 0.15
     });
 
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
