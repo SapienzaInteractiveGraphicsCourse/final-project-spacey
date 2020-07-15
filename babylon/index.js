@@ -226,7 +226,7 @@ let createScene = function () {
     advancedTexture.addControl(panel2);
 
     text3 = new BABYLON.GUI.TextBlock();
-    text3.text = 'wear headphones\nfor a better experience'
+    text3.text = 'headphones on'
     text3.height = "80px";
     text3.width = 1;
     text3.color = "Orange";
@@ -590,3 +590,4 @@ function openStoryDialog() {
     });
     panel.addControl(buttonS);
 }
+

@@ -29,7 +29,8 @@ var innerWidth = window.innerWidth;
 var innerHeight = window.innerHeight;
 var blinkE;
 var textE;
-
+var buttonFull;
+var fpCamera;
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
@@ -37,12 +38,12 @@ let createScene = function () {
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
     var priority = 0;
+
+    result.optimizations.push(new BABYLON.MergeMeshesOptimization(priority));
     result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
-    result.optimizations.push(new BABYLON.LensFlaresOptimization(priority));
     // Next priority
     priority++;
     result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
-    result.optimizations.push(new BABYLON.ParticlesOptimization(priority));
     // Next priority
     priority++;
     result.optimizations.push(new BABYLON.TextureOptimization(priority, 256));
@@ -53,6 +54,22 @@ let createScene = function () {
     priority++;
     result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1));
     optimizer = new BABYLON.SceneOptimizer(scene, result);
+
+    let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    buttonFull = BABYLON.GUI.Button.CreateImageOnlyButton("", "../images/full-screen.png");
+    buttonFull.width = "30px";
+    buttonFull.height = "30px";
+    buttonFull.top = "-45%"
+    buttonFull.left = "47%"
+    buttonFull.color = "Orange";
+    buttonFull.background = "Orange";
+
+    advancedTexture.addControl(buttonFull);
+
+    buttonFull.onPointerUpObservable.add(function () {
+        toggleFullScreen();
+    });
 
     scene.shadowsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, GRAVITY, 0);
@@ -287,7 +304,7 @@ let createScene = function () {
         nav.position = OBJ_POS_1;
         nav.scaling = new BABYLON.Vector3(3, 3, 3)
         if (!MOON) {
-            nav.scaling = new BABYLON.Vector3(7, 7, 7)
+            nav.scaling = new BABYLON.Vector3(9, 9, 9)
         }
         shadowGenerator.addShadowCaster(nav);
         shadowGenerator.getShadowMap().renderList.push(nav);
@@ -347,8 +364,6 @@ let createScene = function () {
 
             let struggle = struggleAnimation(actualBones, bonesOffset);
             struggle.play(true);
-        } else {
-            target.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
         }
         //glowing hoop around target
         hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", { diameter: 10, thickness: 0.1, tessellation: 64 }, scene);
@@ -500,11 +515,17 @@ let createScene = function () {
                 "id": actualBones[key].id
             };
         }
+
+        // fpCamera.cameraAcceleration = 0.05
+        // fpCamera.maxCameraSpeed = 10
+
+
         var offset = new BABYLON.Vector3(0, 2, 0);
         var focusTarget = new BABYLON.TransformNode("offset");
         focusTarget.parent = boy;
         focusTarget.position = offset;
         nearCamera.lockedTarget = focusTarget;
+
 
         // make change of animation smooter
         skeletons[0].animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
@@ -599,6 +620,20 @@ let createScene = function () {
                             // struggle.stop();
                             // repair.play(true);
                             break;
+                        case "Enter":
+                            // if (!fpCamera) {
+                            //     var offset = new BABYLON.Vector3(0, 0, -1);
+                            //     var focusTarget = new BABYLON.MeshBuilder.CreateBox("box", { height: 0.5, width: 0.5, depth: 0.5 }, scene);
+                            //     focusTarget.parent = boy;
+                            //     focusTarget.position = offset;
+
+
+                            //     fpCamera = new BABYLON.UniversalCamera("camera1", START_POS, scene);
+                            //     fpCamera.lockedTarget = focusTarget
+
+                            // }
+                            // scene.activeCamera = (scene.activeCamera == nearCamera ? fpCamera : nearCamera);
+                            break;
                         default:
                             walking.stop();
                             jumping.stop();
@@ -649,8 +684,6 @@ let createScene = function () {
                     hl2.addMesh(oxy_cylinder, BABYLON.Color3.Green());
 
                     if (boy.position.subtract(target.position).length() < 5) {
-                        textE.text = 'press E to drop'
-                        blinkE.restart()
                         flagImp = 0;
                         walking.stop();
                         standing.play();
@@ -666,11 +699,7 @@ let createScene = function () {
                         congoMSg()
                         showEndGUI()
                         MISSION_STATUS = 1;
-                        blinkE.play(true)
                     } else {
-
-                        blinkE.stop()
-                        textE.alpha = 0;
                         oxy_cylinder.position.x = boy.position.x - Math.sin(SPEED_DIR_ANGLE);
                         oxy_cylinder.position.y = boy.position.y + 2;
                         oxy_cylinder.position.z = boy.position.z - Math.cos(SPEED_DIR_ANGLE);
@@ -1036,7 +1065,7 @@ let createScene = function () {
     if (!MOON) {
         scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
         scene.fogDensity = 0.001;
-        scene.fogStart = 300.0;
+        scene.fogStart = 70.0;
         scene.fogEnd = 600.0;
         scene.fogColor = new BABYLON.Color3(0.7, 0.5, 0.3);
     }
@@ -1111,8 +1140,7 @@ function globalToLocal(vector, mesh) {
 /******************* END PHYSIC *****************/
 
 // scene.executeWhenReady(function () {
-//     target.position = setToGround(target);
-//     nav.position = setToGround(nav);
+
 // })
 
 function instructionMsg(TXT_INS) {
@@ -3097,7 +3125,7 @@ function showGUI() {
     var music2 = new BABYLON.Sound("back", "../sounds/" + BACK_SOUND, scene, null, {
         loop: true,
         autoplay: true,
-        volume: 0.15
+        volume: 0.10
     });
 
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -3235,6 +3263,8 @@ function showGUI() {
 
 
 function showEndGUI() {
+    blinkE.stop()
+    textE.alpha = 0;
     scene.onKeyboardObservable.clear();
     nearCamera.upperRadiusLimit = 300;
     nearCamera.detachControl(canvas);
@@ -3380,3 +3410,30 @@ function showEndGUI() {
 // function abs2(vec) {
 //     return Math.sqrt(vec.x * vec.x + vec.z * vec.z)
 // }
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        buttonFull.image.source = "../images/exit.png"
+        var i = document.documentElement;
+        if (i.requestFullscreen) {
+            i.requestFullscreen();
+        } else if (i.webkitRequestFullscreen) {
+            i.webkitRequestFullscreen();
+        } else if (i.mozRequestFullScreen) {
+            i.mozRequestFullScreen();
+        } else if (i.msRequestFullscreen) {
+            i.msRequestFullscreen();
+        }
+    } else {
+        buttonFull.image.source = "../images/full-screen.png"
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
