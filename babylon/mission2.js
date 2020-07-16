@@ -1,11 +1,10 @@
-const START_POS = new BABYLON.Vector3(30.0, 4.5, -10.0);
+const START_POS = new BABYLON.Vector3(30.0, 7, -20.0);
 const SCALE_HERO = new BABYLON.Vector3(1.0, 1.0, 1.0);
 const TARGET_POS = new BABYLON.Vector3(10.0, 5.0, -30.0);
 const FAR_CAM_POS = new BABYLON.Vector3(80.0, 5.0, 100.0);
 const OBJ_POS_1 = new BABYLON.Vector3(65.0, 8.5, 25.0);
-const SPEED = 0.35//0.94; //m/s
-const GRAVITY = -0.9//-3.711; //m/s^2
-const DELTA_FALLING = - (2 * SPEED * Math.cos(Math.PI / 4)) / GRAVITY;
+const SPEED = 0.15//0.94; //m/s
+const GRAVITY = -0.4//-3.711; //m/s^2
 const TXT_TASK = "MISSION 2: The rover fell down the Valles Marineris, find it and fix it.";
 const TXT_FINISH = "Congrats, you fixed the rover!!!";
 const TASK_SOUND = "task2.wav"

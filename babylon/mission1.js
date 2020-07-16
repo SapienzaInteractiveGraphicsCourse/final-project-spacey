@@ -1,6 +1,4 @@
-const START_POS = new BABYLON.Vector3(-10.0, 7.5, -10.0);
-const START_FP = START_POS.clone().add(new BABYLON.Vector3(0, 2, 0))
-
+const START_POS = new BABYLON.Vector3(-10.0, 8.5, -10.0);
 const SCALE_HERO = new BABYLON.Vector3(1.0, 1.0, 1.0);
 const TARGET_POS = new BABYLON.Vector3(0.0, 7.5, -20.0);
 const FAR_CAM_POS = new BABYLON.Vector3(200.0, 45.0, 200.0);
@@ -8,7 +6,6 @@ const OBJ_POS_1 = new BABYLON.Vector3(10.0, 7, -10.0);
 const OXYGEN_POS = new BABYLON.Vector3(-15.0, 7.6, -17.0);
 const SPEED = 0.2; //m/s
 const GRAVITY = -0.32; // m/s^2
-const DELTA_FALLING = - (2 * SPEED * Math.cos(Math.PI / 4)) / GRAVITY;
 const TXT_TASK = "MISSION 1: Your partner needs you. Take an oxygen tank and save his life!";
 const TXT_FINISH = "Congrats, you saved your partner!!!";
 const TASK_SOUND = "task1.wav"

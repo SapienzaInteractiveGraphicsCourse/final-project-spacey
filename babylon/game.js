@@ -472,11 +472,12 @@ let createScene = function () {
         boy.height = vectorsWorld[1].y - vectorsWorld[0].y;
         var HERO_HEIGHT = 2.0;//meters
         var SCALE_FACTOR = boy.height / HERO_HEIGHT;
-        SPEED_MODULE = SPEED_MODULE * SCALE_FACTOR;
+        SPEED_ = SPEED_ * SCALE_FACTOR;
         GRAVITY_ = GRAVITY_ * SCALE_FACTOR;
         //boy.doNotSyncBoundingInfo = true; //uncomment only if not use physics
-        boy.ellipsoidOffset = new BABYLON.Vector3(0, 1.8, 0);
-        boy.ellipsoid = new BABYLON.Vector3(1.25, 2.0, 1.5);
+        boy.ellipsoidOffset = new BABYLON.Vector3(0, boy.height / 2, 0);
+        boy.ellipsoid = new BABYLON.Vector3(0.5, boy.height / 3, 0.5);
+        boy.setPivotMatrix(BABYLON.Matrix.Translation(0, -boy.height / 2, 0), false);
         //boy.showEllipsoid(scene);
 
         var actualBones = {
@@ -540,8 +541,8 @@ let createScene = function () {
         let struggle = struggleAnimation(actualBones, bonesOffset);
         let repair = repairAnimation(actualBones, bonesOffset);
 
-        boy.speed = new BABYLON.Vector3(0, 0, 0);
-        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {}, scene);
+        boy.speed = new BABYLON.Vector3(0, SPEED_ * Math.sin(SPEED_ANGLE), 0);
+        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.1 }, scene);
         var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
 
         myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
@@ -669,12 +670,15 @@ let createScene = function () {
             // boy.position.x = BOY.x0 + BOY.v0x * TIME;
             // boy.position.y = BOY.y0 + BOY.v0y * TIME + 1 / 2 * GRAVITY_ * Math.pow(TIME, 2);
             // boy.position.z = BOY.z0 + BOY.v0z * TIME;
+
             if (activatePhysics) {
+
+
+                boy.moveWithCollisions(boy.speed);
 
                 callPhysics();
 
-                boy.moveWithCollisions(boy.speed);
-                //boy.ellipsoidMesh.position = boy.position.add(boy.ellipsoidOffset);
+                //boy.ellipsoid.position = boy.position;
             }
             if (MOON && !MISSION_STATUS) {
                 //console.log("Dist", boy.position.subtract(oxy_cylinder.position).length());
@@ -844,9 +848,9 @@ let createScene = function () {
         //         BOY.x0 = boy.position.x;
         //         BOY.y0 = boy.position.y;
         //         BOY.z0 = boy.position.z;
-        //         BOY.v0x = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
-        //         BOY.v0y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
-        //         BOY.v0z = -(SPEED_MODULE * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
+        //         BOY.v0x = -(SPEED_ * Math.cos(SPEED_ANGLE) * Math.sin(SPEED_DIR_ANGLE));
+        //         BOY.v0y = SPEED_ * Math.sin(SPEED_ANGLE);
+        //         BOY.v0z = -(SPEED_ * Math.cos(SPEED_ANGLE) * Math.cos(SPEED_DIR_ANGLE));
         //         GRAVITY_ = GRAVITY * SCALE_FACTOR;
         //         //strideExpired = false;
         //         var steps = [step, step1, step2];
@@ -871,48 +875,45 @@ let createScene = function () {
         function callPhysics() {
 
             //Vertical ray
-            var rayY = new BABYLON.Ray();
-            var rayHelperY = new BABYLON.RayHelper(rayY);
-
-            var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
-
-            var localMeshOriginY = globalToLocal(boy.position, boy);
+            var localMeshDirectionY = new BABYLON.Vector3.Down();
             var length = 20;
-
-            rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+            var rayY = new BABYLON.Ray(boy.position, localMeshDirectionY, length);
+            var rayHelperY = new BABYLON.RayHelper(rayY)
             rayHelperY.show(scene);
             var hitInfoY = rayY.intersectsMeshes([ground]);
-
             if (hitInfoY.length) {
                 sphere.setEnabled(true);
                 sphere.position.copyFrom(hitInfoY[0].pickedPoint);
 
                 //console.log("Boy Y", ( boy.position.y));
                 //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
-                var sy = boy.position.subtract(hitInfoY[0].pickedPoint).length();
+                var sy = boy.position.y - hitInfoY[0].pickedPoint.y;
                 //console.log("sy", sy);
-                //console.log("sm", SPEED_MODULE);
+                //console.log("sm", SPEED_);
                 //console.log("gra", GRAVITY_);
                 //console.log("sa", SPEED_ANGLE);
                 // console.log("sp", boy.speed);
+
                 var t_delta = (scene.getEngine().getDeltaTime() / 1000);
-                if (sy > Y_THRESH) {
+                if (sy > boy.height / 2 + 0.05) {
                     // console.log("111")
-                    boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                    boy.speed.x = - SPEED_ * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                     boy.speed.y = boy.speed.y + GRAVITY_ * t_delta;
-                    boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                    boy.speed.z = - SPEED_ * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+
                 }
                 else {
                     // console.log("222")
                     if (flagImp) {
                         // console.log("2-1")
-                        boy.speed.x = - SPEED_MODULE * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
-                        boy.speed.y = SPEED_MODULE * Math.sin(SPEED_ANGLE);
-                        boy.speed.z = - SPEED_MODULE * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                        boy.speed.x = - SPEED_ * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
+                        boy.speed.y = SPEED_ * Math.sin(SPEED_ANGLE);
+                        boy.speed.z = - SPEED_ * Math.cos(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                         walking.speedRatio = getSpeedRatio()//oppure 1 / DELTA_FALLING
                         // generatePoints();
                     }
                     else {
+                        boy.speed.y = SPEED_ * Math.sin(SPEED_ANGLE);
                         activatePhysics = 0;
                         // console.log("2-2")
                     }
@@ -928,68 +929,68 @@ let createScene = function () {
 
         myMaterialH.diffuseColor = new BABYLON.Color3(1, 0, 0);
         sphereH.material = myMaterialH;
-        function generatePoints() {
-            var point = new BABYLON.Vector3();
+        // function generatePoints() {
+        //     var point = new BABYLON.Vector3();
 
-            var hor_range = Math.pow(SPEED_MODULE, 2) * Math.sin(2 * SPEED_ANGLE) / (-GRAVITY_);
-            var tof = 2 * SPEED_MODULE * Math.sin(SPEED_ANGLE) / (-GRAVITY_);
-            var t_small = (scene.getEngine().getDeltaTime() / 1000);
-            console.log("Hor", hor_range)
-            console.log("Tof", tof)
-            //Horizontal ray
-            for (var i = 0; i < 5; i++) {
+        //     var hor_range = Math.pow(SPEED_, 2) * Math.sin(2 * SPEED_ANGLE) / (-GRAVITY_);
+        //     var tof = 2 * SPEED_ * Math.sin(SPEED_ANGLE) / (-GRAVITY_);
+        //     var t_small = (scene.getEngine().getDeltaTime() / 1000);
+        //     console.log("Hor", hor_range)
+        //     console.log("Tof", tof)
+        //     //Horizontal ray
+        //     for (var i = 0; i < 5; i++) {
 
-                var ti = (1 / (5 - i)) * tof;
+        //         var ti = (1 / (5 - i)) * tof;
 
-                point.x = boy.position.x + boy.speed.x * ti;
-                point.y = boy.position.y + boy.speed.y * ti + 0.5 * GRAVITY_ * Math.pow(ti, 2);
-                point.z = boy.position.z + boy.speed.z * ti;
+        //         point.x = boy.position.x + boy.speed.x * ti;
+        //         point.y = boy.position.y + boy.speed.y * ti + 0.5 * GRAVITY_ * Math.pow(ti, 2);
+        //         point.z = boy.position.z + boy.speed.z * ti;
 
-                var rayY = new BABYLON.Ray();
-                var rayHelperY = new BABYLON.RayHelper(rayY);
+        //         var rayY = new BABYLON.Ray();
+        //         var rayHelperY = new BABYLON.RayHelper(rayY);
 
-                var localMeshDirectionY = new BABYLON.Vector3(0, 0, -1);
+        //         var localMeshDirectionY = new BABYLON.Vector3(0, 0, -1);
 
-                var localMeshOriginY = globalToLocal(point, boy);
-                var length = 5;
+        //         var localMeshOriginY = globalToLocal(point, boy);
+        //         var length = 5;
 
-                rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
-                rayHelperY.show(scene);
-                var hitInfoY = rayY.intersectsMeshes([ground]);
+        //         rayHelperY.attachToMesh(boy, localMeshDirectionY, localMeshOriginY, length);
+        //         rayHelperY.show(scene);
+        //         var hitInfoY = rayY.intersectsMeshes([ground]);
 
-                if (hitInfoY.length) {
-                    sphereH.setEnabled(true);
-                    sphereH.position.copyFrom(hitInfoY[0].pickedPoint);
+        //         if (hitInfoY.length) {
+        //             sphereH.setEnabled(true);
+        //             sphereH.position.copyFrom(hitInfoY[0].pickedPoint);
 
-                    //console.log("Boy Y", ( boy.position.y));
-                    //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
-                    var pt1 = boy.position.subtract(point); //from boy at ground to source point on traj
-                    var pt2 = point.subtract(hitInfoY[0].pickedPoint); //from source point on traj to intersecting point
-                    var sh = point.subtract(hitInfoY[0].pickedPoint).length();
-                    //console.log("Horizontal", sh);
+        //             //console.log("Boy Y", ( boy.position.y));
+        //             //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
+        //             var pt1 = boy.position.subtract(point); //from boy at ground to source point on traj
+        //             var pt2 = point.subtract(hitInfoY[0].pickedPoint); //from source point on traj to intersecting point
+        //             var sh = point.subtract(hitInfoY[0].pickedPoint).length();
+        //             //console.log("Horizontal", sh);
 
-                    if ((Math.sqrt(Math.pow(pt1.x, 2) + Math.pow(pt1.z, 2)) + Math.sqrt(Math.pow(pt2.x, 2) + Math.pow(pt2.z, 2))) < hor_range) {
-                        console.log("Hitting point found at ", point);
-                        break;
-                    }
-                }
-                else {
-                    sphereH.setEnabled(false);
-                }
-            }
+        //             if ((Math.sqrt(Math.pow(pt1.x, 2) + Math.pow(pt1.z, 2)) + Math.sqrt(Math.pow(pt2.x, 2) + Math.pow(pt2.z, 2))) < hor_range) {
+        //                 console.log("Hitting point found at ", point);
+        //                 break;
+        //             }
+        //         }
+        //         else {
+        //             sphereH.setEnabled(false);
+        //         }
+        //     }
 
-        }
+        // }
 
 
         function getSpeedRatio() {
             var [x0, y0, z0] = [boy.position.x, boy.position.y, boy.position.z];
             var [vx0, vy0, vz0] = [boy.speed.x, boy.speed.y, boy.speed.z];
-            var precision = 4;
-            var depth = 4;
+            var precision = 8;
+            var depth = 6;
             var strangePhysics = 15;
-            // var halfFPS = 4;
-            //var stepsPerAnimation = 2;
-            var delta_steps = strangePhysics * DELTA_FALLING / precision;
+            var stepsPerAnimation = 2;
+            var delta_jump = - 2 * SPEED_ * Math.sin(SPEED_ANGLE) / GRAVITY_;
+            var delta_steps = strangePhysics * delta_jump / precision;
             var t_n, t_n_1, length, point_n, point_n_1, direction, origin, ray, hit;
             var rayHelperY;
             for (let n = 0; n < (precision + depth); n++) {
@@ -1041,14 +1042,13 @@ let createScene = function () {
                     // customMesh.material = mat;
                     //var star = new BABYLON.Mesh.CreateSphere('star', 16, .2, scene);
                     //star.position = hit[0].pickedPoint
-                    var mean = (t_n + t_n_1) / 2
+                    //var mean = t_n_1
                     //console.log('1/MEAN: ' + 1 / mean * strangePhysics)
-                    return 1 / mean * strangePhysics;
+                    return 1 / t_n_1 * strangePhysics * stepsPerAnimation;
                 }
             }
-            //console.log('DELTA_FALLING_ :' + DELTA_FALLING_)
 
-            return 1 / DELTA_FALLING;
+            return 1 / delta_jump;
         }
 
     }, function (loading) {
@@ -1079,7 +1079,7 @@ let createScene = function () {
 //var BOY;
 var SPEED_ANGLE = BABYLON.Tools.ToRadians(45.0);
 var SPEED_DIR_ANGLE = BABYLON.Tools.ToRadians(0);
-var SPEED_MODULE = SPEED;
+var SPEED_ = SPEED;
 var GRAVITY_ = GRAVITY;
 var Y_THRESH = 0.3;
 var turnboi = BABYLON.Tools.ToRadians(15);
@@ -1216,17 +1216,15 @@ function updateRadar() {
 
 }
 function setToGround(mesh) {
-    var rayY = new BABYLON.Ray();
-    var rayHelperY = new BABYLON.RayHelper(rayY);
-    var localMeshDirectionY = new BABYLON.Vector3(0, -1, 0);
-    var localMeshOriginY = globalToLocal(mesh.position, mesh);
+    var localMeshDirectionY = new BABYLON.Vector3.Down();
     var length = 20;
-    rayHelperY.attachToMesh(mesh, localMeshDirectionY, localMeshOriginY, length);
+    var rayY = new BABYLON.Ray(mesh.position, localMeshDirectionY, length);
+    var rayHelperY = new BABYLON.RayHelper(rayY)
+    rayHelperY.show(scene);
     var hitInfoY = rayY.intersectsMeshes([ground]);
     if (hitInfoY.length) {
         return hitInfoY[0].pickedPoint;
-    }
-    else return mesh.position;
+    } else return mesh.position
 }
 
 window.addEventListener('resize', function () {
@@ -1292,11 +1290,11 @@ function walkAnimation(parts, bonesOffset) {
         let x = bonesOffset["trunk"].rotation.x;
         let y = bonesOffset["trunk"].rotation.y;
         let z = bonesOffset["trunk"].rotation.z;
-        trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(4), y, z) });
-        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x, y, z) });
-        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(4), y, z) });
-        trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x, y, z) });
+        trunkKeys.push({ frame: 0, value: new BABYLON.Vector3(x - BABYLON.Tools.ToRadians(5), y, z) });
+        trunkKeys.push({ frame: 20, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 40, value: new BABYLON.Vector3(x - BABYLON.Tools.ToRadians(5), y, z) });
+        trunkKeys.push({ frame: 60, value: new BABYLON.Vector3(x + BABYLON.Tools.ToRadians(10), y, z) });
+        trunkKeys.push({ frame: 80, value: new BABYLON.Vector3(x - BABYLON.Tools.ToRadians(5), y, z) });
         trunk.setKeys(trunkKeys);
     }
     // leftUpperArm keys
