@@ -1,6 +1,6 @@
-const START_POS = new BABYLON.Vector3(30.0, 7, -20.0);
+const START_POS = new BABYLON.Vector3(30.0, 5, -6.0);
 const SCALE_HERO = new BABYLON.Vector3(1.0, 1.0, 1.0);
-const TARGET_POS = new BABYLON.Vector3(10.0, 5.0, -30.0);
+const TARGET_POS = new BABYLON.Vector3(6.95, 7.0, -86.0);
 const FAR_CAM_POS = new BABYLON.Vector3(80.0, 5.0, 100.0);
 const OBJ_POS_1 = new BABYLON.Vector3(65.0, 8.5, 25.0);
 const SPEED = 0.15//0.94; //m/s

@@ -221,18 +221,6 @@ let createScene = function () {
     createPlanet(uranus);
     createPlanet(neptune);
 
-    var panel2 = new BABYLON.GUI.StackPanel();
-    panel2.top = '-35%';
-    advancedTexture.addControl(panel2);
-
-    text3 = new BABYLON.GUI.TextBlock();
-    text3.text = 'headphones on'
-    text3.height = "80px";
-    text3.width = 1;
-    text3.color = "Orange";
-    text3.fontSize = 24;
-    panel2.addControl(text3);
-
     var messageContainer = new BABYLON.GUI.Rectangle();
     messageContainer.left = '30%';
     messageContainer.top = '25%';
@@ -387,7 +375,7 @@ engine.runRenderLoop(function () {
     if (scene.isReady() && LOADING.timeout) {
         if (LOADING.scene.isReady()) {
             LOADING.scene.dispose();
-            fading(text3, 30, 1, 0);
+            openAdviceDialog();
         }
         scene.render();
     } else if (LOADING.scene.isReady()) {
@@ -480,20 +468,16 @@ function fading(container, speed, start, end) {
         value: start
     });
 
-    keys.push({
-        frame: 50,
-        value: end
-    });
     //At the animation key 100, the value of scaling is "1"
     keys.push({
         frame: 100,
-        value: start
+        value: end
     });
 
     animationBox.setKeys(keys);
     container.animations = [];
     container.animations.push(animationBox);
-    scene.beginAnimation(container, 0, 100, true);
+    scene.beginAnimation(container, 0, 100, false);
 
 }
 
@@ -522,7 +506,7 @@ function openCommandDialog() {
 
     var text = new BABYLON.GUI.TextBlock();
     text.text = 'commands'
-    text.height = "40px";
+    text.height = "30px";
     text.width = 1;
     text.color = "Orange";
     text.fontSize = 30;
@@ -530,7 +514,7 @@ function openCommandDialog() {
 
     var text1 = new BABYLON.GUI.TextBlock();
     text1.text = 'W & S keys to move forward or stop respectively\nA & D keys to turn slight left or right\nQ & E keys to grab or throw objects\nArrow keys and mouse to rotate camera view'
-    text1.height = "100px";
+    text1.height = "160px";
     text1.width = 1;
     text1.color = "Orange";
     text1.fontSize = 20;
@@ -538,7 +522,7 @@ function openCommandDialog() {
 
     var buttonC = BABYLON.GUI.Button.CreateSimpleButton("bCommand", "close");
     buttonC.width = 0.30;
-    buttonC.height = "40px";
+    buttonC.height = "35px";
     buttonC.color = "orange";
     buttonC.fontSize = 20;
     buttonC.cornerRadius = 20;
@@ -564,7 +548,7 @@ function openStoryDialog() {
 
     var text = new BABYLON.GUI.TextBlock();
     text.text = 'story'
-    text.height = "40px";
+    text.height = "30px";
     text.width = 1;
     text.color = "Orange";
     text.fontSize = 30;
@@ -572,7 +556,7 @@ function openStoryDialog() {
 
     var text1 = new BABYLON.GUI.TextBlock();
     text1.text = 'The game consists of two levels which define two different\nmissions, Mission 1 (Moon) and Mission 2 (Mars). In Mission\nMoon save your co-astronaut by carrying an oxygen cylinder to him.\nIn Mission Mars go to a rover nearby and start repairing it.'
-    text1.height = "100px";
+    text1.height = "160px";
     text1.width = 1;
     text1.color = "Orange";
     text1.fontSize = 20;
@@ -580,7 +564,7 @@ function openStoryDialog() {
 
     var buttonS = BABYLON.GUI.Button.CreateSimpleButton("bStory", "close");
     buttonS.width = 0.30;
-    buttonS.height = "40px";
+    buttonS.height = "35px";
     buttonS.color = "orange";
     buttonS.fontSize = 20;
     buttonS.cornerRadius = 20;
@@ -589,5 +573,51 @@ function openStoryDialog() {
         messageContainer.dispose()
     });
     panel.addControl(buttonS);
+}
+
+
+function openAdviceDialog() {
+    var messageContainer = new BABYLON.GUI.Rectangle();
+    messageContainer.height = 0.5;
+    messageContainer.width = 0.5;
+    messageContainer.cornerRadius = 20;
+    messageContainer.color = "Orange";
+    messageContainer.background = "black"
+    messageContainer.alpha = 0;
+    //    messageContainer.thickness = 0;
+    advancedTexture.addControl(messageContainer);
+
+    var panel = new BABYLON.GUI.StackPanel();
+    messageContainer.addControl(panel);
+
+    var text = new BABYLON.GUI.TextBlock();
+    text.text = 'advices'
+    text.height = "30px";
+    text.width = 1;
+    text.color = "Orange";
+    text.fontSize = 30;
+    panel.addControl(text);
+
+    var text1 = new BABYLON.GUI.TextBlock();
+    text1.text = 'The game will adapt to your memory,\n downgrading the scene if necessary. \n Your connection will determine the loading time. \n Google Chrome is strongly recommended. \n Turn on the sound and use hearphones.'
+    text1.height = "160px";
+    text1.width = 1;
+    text1.color = "Orange";
+    text1.fontSize = 20;
+    panel.addControl(text1);
+
+    var buttonS = BABYLON.GUI.Button.CreateSimpleButton("ok", "enjoy");
+    buttonS.width = 0.30;
+    buttonS.height = "35px";
+    buttonS.color = "orange";
+    buttonS.fontSize = 20;
+    buttonS.cornerRadius = 20;
+    buttonS.onPointerUpObservable.add(function () {
+        click.play()
+        messageContainer.dispose()
+    });
+    panel.addControl(buttonS);
+    fading(messageContainer, 40, 0, 1);
+
 }
 
