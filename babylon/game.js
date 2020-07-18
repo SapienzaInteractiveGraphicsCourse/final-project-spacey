@@ -57,9 +57,6 @@ let createScene = function () {
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
     var priority = 0;
-    result.optimizations.push(new BABYLON.MergeMeshesOptimization(priority));
-    result.optimizations.push(new debugOptimize(priority));
-    // Next priority
     priority++;
     result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
     result.optimizations.push(new debugOptimize(priority));
@@ -483,13 +480,13 @@ let createScene = function () {
         ground.freezeWorldMatrix();
     });
 
-    ground.isPickable = true;
-    scene.onPointerDown = function (evt, pickResult) {
-        // if the click hits the ground object, we change the impact position
-        if (pickResult.hit) {
-            console.log("pick-hit: " + pickResult.pickedPoint);
-        }
-    }
+    // ground.isPickable = true;
+    // scene.onPointerDown = function (evt, pickResult) {
+    //     // if the click hits the ground object, we change the impact position
+    //     if (pickResult.hit) {
+    //         console.log("pick-hit: " + pickResult.pickedPoint);
+    //     }
+    // }
 
     BABYLON.SceneLoader.ImportMesh("Boy", "../models/", BOY_PATH, scene, function (newMeshes, particleSystems, skeletons) {
         boy = scene.getMeshByName(newMeshes[0].name);
