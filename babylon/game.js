@@ -57,13 +57,12 @@ let createScene = function () {
 
     var result = new BABYLON.SceneOptimizerOptions(60, 2000);
     var priority = 0;
+    result.optimizations.push(new BABYLON.TextureOptimization(priority, 128));
+    result.optimizations.push(new debugOptimize(priority));
     priority++;
     result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
     result.optimizations.push(new debugOptimize(priority));
     // Next priority
-    priority++;
-    result.optimizations.push(new BABYLON.TextureOptimization(priority, 128));
-    result.optimizations.push(new debugOptimize(priority));
     priority++;
     result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
     result.optimizations.push(new debugOptimize(priority));
