@@ -55,22 +55,25 @@ let createScene = function () {
         };
     }
 
-    var result = new BABYLON.SceneOptimizerOptions(60, 2000);
+
+    var result = new BABYLON.SceneOptimizerOptions(50, 10000);
     var priority = 0;
+
+    result.optimizations.push(new debugOptimize(priority));
     result.optimizations.push(new BABYLON.TextureOptimization(priority, 128));
-    result.optimizations.push(new debugOptimize(priority));
+
     priority++;
-    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
     result.optimizations.push(new debugOptimize(priority));
-    // Next priority
+    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1.2));
+
     priority++;
+    result.optimizations.push(new debugOptimize(priority));
     result.optimizations.push(new BABYLON.PostProcessesOptimization(priority));
-    result.optimizations.push(new debugOptimize(priority));
-    // Next priority
+
     priority++;
-    result.optimizations.push(new BABYLON.HardwareScalingOptimization(priority, 1));
     result.optimizations.push(new debugOptimize(priority));
-    // Next priority
+    result.optimizations.push(new BABYLON.RenderTargetsOptimization(priority));
+
     // priority++;
     // result.optimizations.push(new debugOptimize(priority));
     // result.optimizations.push(new BABYLON.ShadowsOptimization(priority));
@@ -169,7 +172,7 @@ let createScene = function () {
     });
 
     // Shadows
-    let shadowGenerator = new BABYLON.ShadowGenerator(1024, dirLight);
+    let shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
     shadowGenerator.usePercentageCloserFiltering = true;
     //shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_LOW; // otherwise requires too much memory
 
@@ -1095,7 +1098,7 @@ let createScene = function () {
         scene.fogEnd = 600.0;
         scene.fogColor = new BABYLON.Color3(0.7, 0.5, 0.3);
     }
-    optimizer.start();
+    //optimizer.start();
     return scene;
 };
 
