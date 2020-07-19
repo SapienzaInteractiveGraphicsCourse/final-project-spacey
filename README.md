@@ -12,7 +12,7 @@ The game consists of two levels which defines two different missions, *Mission M
 
 ## Contributors
 
-The project has been completely developed by *Akash Garg* and *Simone Rossetti*
+The project has been completely developed by *Akash Garg* and *Simone Rossetti*.
 
 ## Documentation
 
@@ -20,7 +20,7 @@ If you want to read more about the project developing, you can find all the deta
 
 ## Demo
 
-If you want to play the game, you can find it [here](https://sapienzainteractivegraphicscourse.github.io/final-project-spacey/babylon/index.html).
+You can play the game [here](https://sapienzainteractivegraphicscourse.github.io/final-project-spacey/babylon/index.html).
 
 ## Controls
 
@@ -29,3 +29,6 @@ Following are the control keys to play the game:
 * A & D keys to turn slight left or right
 * Q & E keys to grab or throw/repair objects
 * Arrow keys and mouse to rotate camera view
+* Spacebar to jump
+
+![alt text](https://sapienzainteractivegraphicscourse.github.io/final-project-spacey/img2.png)
