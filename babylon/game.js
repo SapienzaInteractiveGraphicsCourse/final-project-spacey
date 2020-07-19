@@ -338,8 +338,9 @@ let createScene = function () {
             struggle.play(true);
         }
         //glowing hoop around target
-        hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", { diameter: 10, thickness: 0.1, tessellation: 64 }, scene);
-        hoopTarget.position = target.position;
+        hoopTarget = BABYLON.MeshBuilder.CreateTorus("hoopTarget", { diameter: 5, thickness: 0.1, tessellation: 64 }, scene);
+        hoopTarget.position = target.position.clone();
+        hoopTarget.position.y += 0.25
         var hoopMaterial = new BABYLON.StandardMaterial("hoopMaterial", scene);
         hoopMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
         hoopTarget.material = hoopMaterial;
@@ -644,7 +645,7 @@ let createScene = function () {
                     flagQ = 0;
                     hl2.addMesh(oxy_cylinder, BABYLON.Color3.Green());
 
-                    if (boy.position.subtract(target.position).length() < 5) {
+                    if (boy.position.subtract(target.position).length() < 2.5) {
                         flagImp = 0;
                         walking.stop();
                         standing.play();
@@ -732,7 +733,7 @@ let createScene = function () {
 
             if (!MOON && !MISSION_STATUS) {
 
-                if (boy.position.subtract(target.position).length() < 5) {
+                if (boy.position.subtract(target.position).length() < 2.5) {
                     blinkE.play(true)
                     //approachToPoint(target)
                     if (flagE) {
@@ -896,9 +897,14 @@ let createScene = function () {
                         // console.log("2-2")
                     }
                 }
-                if (boy.position.y - boy.height / 2 + 0.1 < hitInfoY[0].pickedPoint.y) {
-                    boy.speed.y = SPEED_ * Math.sin(SPEED_ANGLE);
-                    activatePhysics = 1;
+                if (boy.position.y - boy.height / 2 + 0.05 < hitInfoY[0].pickedPoint.y) {
+                    if (!flagImp) {
+                        boy.speed.y = 2 / 3 * SPEED_ * Math.sin(SPEED_ANGLE);
+                        activatePhysics = 1;
+                    } else {
+                        boy.speed.y = SPEED_ * Math.sin(SPEED_ANGLE);
+                        activatePhysics = 1;
+                    }
                 }
             }
             else {
@@ -3499,6 +3505,38 @@ function topButtons() {
 
     buttonOpt.onPointerUpObservable.addOnce(function () {
         optimizer.start();
+        var anim = fading(text0, 100, text.alpha, 0);
+        anim.onAnimationEnd = function () {
+            text0.alpha = 0
+            text0.dispose()
+        }
+        var anim = fading(buttonOpt, 100, buttonOpt.alpha, 0);
+        anim.onAnimationEnd = function () {
+            buttonOpt.alpha = 0
+            buttonOpt.dispose()
+            var messageContainer = new BABYLON.GUI.Rectangle();
+            messageContainer.height = "70px";
+            messageContainer.width = "200px";
+            messageContainer.top = '35%'
+            messageContainer.cornerRadius = 20;
+            messageContainer.color = "Orange";
+            messageContainer.alpha = 0;
+            advancedTexture.addControl(messageContainer);
+
+            var panel = new BABYLON.GUI.StackPanel();
+            messageContainer.addControl(panel);
+
+            var text = new BABYLON.GUI.TextBlock();
+            text.text = "optimization started \n downgrade enabled"
+            text.height = "40px";
+            text.width = 1;
+            text.color = "Orange";
+            text.fontSize = 15;
+            panel.addControl(text);
+
+            var anim = blinking(messageContainer, 20, 1, 0)
+            anim.play(false)
+        }
     });
 
     buttonFull.onPointerEnterObservable.add(function () {
