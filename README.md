@@ -31,4 +31,4 @@ Following are the control keys to play the game:
 * Arrow keys and mouse to rotate camera view
 * Spacebar to jump
 
-![alt text](https://sapienzainteractivegraphicscourse.github.io/final-project-spacey/img2.png)
+![alt text](/img2.png)
