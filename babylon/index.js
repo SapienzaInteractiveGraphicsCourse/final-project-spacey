@@ -513,7 +513,7 @@ function openCommandDialog() {
     panel.addControl(text);
 
     var text1 = new BABYLON.GUI.TextBlock();
-    text1.text = 'W & S keys to move forward or stop respectively\nA & D keys to turn slight left or right\nQ & E keys to grab or throw objects\nArrow keys and mouse to rotate camera view'
+    text1.text = 'W & S keys to move forward or stop respectively\nA & D keys to turn slight left or right\nSpacebar to jump\nQ & E keys to grab or throw objects\nArrow keys and mouse to rotate camera view'
     text1.height = "160px";
     text1.width = 1;
     text1.color = "Orange";
