@@ -31,6 +31,7 @@ var blinkE;
 var textE;
 var buttonFull;
 var fpCamera;
+let buttonOpt;
 
 let createScene = function () {
     engine.setHardwareScalingLevel(1);
@@ -80,21 +81,7 @@ let createScene = function () {
 
     optimizer = new BABYLON.SceneOptimizer(scene, result);
 
-    let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-    buttonFull = BABYLON.GUI.Button.CreateImageOnlyButton("", "../images/full-screen.png");
-    buttonFull.width = "30px";
-    buttonFull.height = "30px";
-    buttonFull.top = "-45%"
-    buttonFull.left = "47%"
-    buttonFull.color = "Orange";
-    buttonFull.background = "Orange";
-
-    advancedTexture.addControl(buttonFull);
-
-    buttonFull.onPointerUpObservable.add(function () {
-        toggleFullScreen();
-    });
+    topButtons();
 
     scene.shadowsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, GRAVITY, 0);
@@ -533,7 +520,7 @@ let createScene = function () {
         let struggle = struggleAnimation(actualBones, bonesOffset);
         let repair = repairAnimation(actualBones, bonesOffset);
 
-        boy.speed = new BABYLON.Vector3(0, 0.5, 0);
+        boy.speed = new BABYLON.Vector3(0, 0, 0);
         var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
         var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
 
@@ -878,7 +865,7 @@ let createScene = function () {
 
                 //console.log("Boy Y", ( boy.position.y));
                 //console.log("Grnd Y", (hitInfoY[0].pickedPoint.y)  );
-                var sy = boy.position.y - hitInfoY[0].pickedPoint.y;
+                //var sy = boy.position.y - hitInfoY[0].pickedPoint.y;
                 //console.log("sy", sy);
                 //console.log("sm", SPEED_);
                 //console.log("gra", GRAVITY_);
@@ -886,7 +873,7 @@ let createScene = function () {
                 // console.log("sp", boy.speed);
 
                 var t_delta = (scene.getEngine().getDeltaTime() / 1000);
-                if (sy > boy.height / 2 + 0.05) {
+                if (boy.position.y - boy.height / 2 > hitInfoY[0].pickedPoint.y) {
                     // console.log("111")
                     boy.speed.x = - SPEED_ * Math.sin(SPEED_DIR_ANGLE) * Math.cos(SPEED_ANGLE);
                     boy.speed.y = boy.speed.y + GRAVITY_ * t_delta;
@@ -908,6 +895,10 @@ let createScene = function () {
                         activatePhysics = 0;
                         // console.log("2-2")
                     }
+                }
+                if (boy.position.y - boy.height / 2 + 0.1 < hitInfoY[0].pickedPoint.y) {
+                    boy.speed.y = SPEED_ * Math.sin(SPEED_ANGLE);
+                    activatePhysics = 1;
                 }
             }
             else {
@@ -3006,7 +2997,7 @@ function slowZoomOut() {
     scene.beginAnimation(nearCamera, 0, 3000, false, 1);
 }
 
-function fading(container, speed, start, end, callback) {
+function fading(container, speed, start, end) {
 
     container.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
     container.animationPropertiesOverride.enableBlending = true;
@@ -3046,7 +3037,7 @@ function blinking(container, speed, start, end) {
     container.animationPropertiesOverride.loopMode = 0;
 
 
-    let animationBox = new BABYLON.Animation("fading", "alpha", speed, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+    let animationBox = new BABYLON.Animation("blinking", "alpha", speed, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
 
     // An array with all animation keys
     let keys = [];
@@ -3455,4 +3446,77 @@ function optimizationMessage(level) {
 
     var anim = blinking(messageContainer, 30, 1, 0)
     anim.play(false)
+}
+
+function topButtons() {
+    let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var text = new BABYLON.GUI.TextBlock();
+    text.top = "-45%"
+    text.left = "43%"
+    text.text = "fullscreen"
+    text.height = "20px";
+    text.width = 1;
+    text.color = "Orange";
+    text.fontSize = 15;
+    text.alpha = 0;
+    advancedTexture.addControl(text);
+
+    buttonFull = BABYLON.GUI.Button.CreateImageOnlyButton("", "../images/full-screen.png");
+    buttonFull.width = "30px";
+    buttonFull.height = "30px";
+    buttonFull.top = "-45%"
+    buttonFull.left = "47%"
+    buttonFull.color = "Orange";
+    buttonFull.background = "Orange";
+
+    advancedTexture.addControl(buttonFull);
+
+    buttonFull.onPointerUpObservable.add(function () {
+        toggleFullScreen();
+    });
+
+    var text0 = new BABYLON.GUI.TextBlock();
+    text0.top = "-40%"
+    text0.left = "43%"
+    text0.text = "optimize"
+    text0.height = "20px";
+    text0.width = 1;
+    text0.color = "Orange";
+    text0.fontSize = 15;
+    text0.alpha = 0;
+    advancedTexture.addControl(text0);
+
+    buttonOpt = BABYLON.GUI.Button.CreateImageOnlyButton("", "../images/thunder.png");
+    buttonOpt.width = "30px";
+    buttonOpt.height = "30px";
+    buttonOpt.top = "-40%"
+    buttonOpt.left = "47%"
+    buttonOpt.color = "Orange";
+    buttonOpt.background = "Orange";
+
+    advancedTexture.addControl(buttonOpt);
+
+    buttonOpt.onPointerUpObservable.addOnce(function () {
+        optimizer.start();
+    });
+
+    buttonFull.onPointerEnterObservable.add(function () {
+        fading(text, 100, text.alpha, 1);
+    });
+    buttonFull.onPointerOutObservable.add(function () {
+        var anim = fading(text, 100, text.alpha, 0);
+        anim.onAnimationEnd = function () {
+            text.alpha = 0
+        }
+    });
+    buttonOpt.onPointerEnterObservable.add(function () {
+        fading(text0, 100, text0.alpha, 1);
+    });
+    buttonOpt.onPointerOutObservable.add(function () {
+        var anim = fading(text0, 100, text0.alpha, 0);
+        anim.onAnimationEnd = function () {
+            text0.alpha = 0
+        }
+    });
 }
