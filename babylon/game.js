@@ -898,11 +898,12 @@ let createScene = function () {
                     }
                 }
                 if (boy.position.y - boy.height / 2 + 0.05 < hitInfoY[0].pickedPoint.y) {
-                    if (!flagImp) {
-                        boy.speed.y = 2 / 3 * SPEED_ * Math.sin(SPEED_ANGLE);
-                        activatePhysics = 1;
-                    } else {
+                    if (flagImp) {
                         boy.speed.y = SPEED_ * Math.sin(SPEED_ANGLE);
+                        activatePhysics = 1;
+                        walking.speedRatio = getSpeedRatio()//oppure 1 / DELTA_FALLING
+                    } else {
+                        boy.speed.y = 2 / 3 * SPEED_ * Math.sin(SPEED_ANGLE);
                         activatePhysics = 1;
                     }
                 }
