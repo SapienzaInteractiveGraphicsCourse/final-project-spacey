@@ -16,7 +16,7 @@ The project has been completely developed by *Akash Garg* and *Simone Rossetti*
 
 ## Documentation
 
-If you want to read more about the project developing, you can find all the details [here](https://sapienzainteractivegraphicscourse.github.io/final-project-spacey/report.pdf).
+If you want to read more about the project developing, you can find all the details [here](/report.pdf).
 
 ## Demo
 
